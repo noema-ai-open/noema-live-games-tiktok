@@ -6,6 +6,14 @@ NOEMA Rescue Run is an original interactive swarm-rescue game for TikTok LIVE. A
 
 The game is inspired by the general genre of crowd-routing puzzle games, not by any specific protected characters, artwork, sounds, names or level designs.
 
+## Branding
+
+The public-facing product mark is:
+
+**Powered by NOEMA AI**
+
+The game itself remains a distinct NOEMA world with original characters, terminology, visual design, sounds and level mechanics.
+
 ## Stream goals
 
 - Understandable within seconds on a vertical mobile screen
@@ -40,6 +48,17 @@ Each runner has a deterministic state:
 The simulation must be deterministic for the same seed and command sequence. The gateway assigns a sequence number to every accepted command so the game can log and replay a round.
 
 ## Audience interaction
+
+### Mobile interaction model
+
+The game overlay is part of the live video and is not directly tappable by viewers. Mobile interaction therefore uses TikTok's native controls:
+
+- viewers tap the native gift panel to choose a gift
+- the bridge receives the gift event
+- the gateway maps that gift to a configured game action
+- the game displays the resulting effect and viewer attribution
+
+The overlay must clearly show which native gifts trigger which actions, using readable icons, short labels and a rotating action legend. No fake tappable buttons should be drawn into the stream.
 
 ### Likes
 
@@ -102,6 +121,7 @@ The mobile composition should reserve:
 - center for the active level
 - lower area for team energy, rescue count and timer
 - edge space for temporary viewer attribution
+- one compact native-gift action legend that remains readable on a phone
 
 ## MVP levels
 
@@ -126,3 +146,4 @@ Adds route voting and temporary portals.
 - Supports 30 runners at 60 frames per second on a normal streaming PC
 - Can pause and resume without losing deterministic state
 - Contains no TikTok credentials or secrets in the browser bundle
+- Displays configured native gift mappings clearly on a vertical phone-sized canvas
