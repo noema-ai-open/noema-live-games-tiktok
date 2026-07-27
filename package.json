@@ -9,9 +9,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @noema/live-game --filter @noema/game-gateway dev",
+    "dev": "pnpm --filter @noema/live-game dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @noema/live-game test",
     "clean": "pnpm -r clean"
   }
 }

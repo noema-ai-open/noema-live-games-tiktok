@@ -133,11 +133,13 @@ Examples:
 
 A recovery window starts immediately after major sabotage. Helpful gifts during that window gain a configurable repair multiplier.
 
-### Tier 7: Cataclysm
+### Tier 7: ZAR-BOMBE
 
 Suggested band: 10,000 coins or the highest locally available premium gift tier
 
-Working effect name: **NOEMA Cataclysm**
+Viewer-facing effect name: **ZAR-BOMBE**
+
+Internal command identifier: `tsar_bomb`
 
 Visual sequence:
 
@@ -148,12 +150,12 @@ Visual sequence:
 5. workers are scattered, protected workers survive
 6. a 20 to 30 second emergency rebuild phase begins
 
-The cataclysm should destroy approximately 50 to 70 percent of temporary construction, not permanently erase the entire session. A full hard reset is bad game design because one spender could terminate the content instead of creating more content.
+The ZAR-BOMBE should destroy approximately 50 to 70 percent of temporary construction, not permanently erase the entire session. A full hard reset is bad game design because one spender could terminate the content instead of creating more content.
 
 The effect requires:
 
 - global cooldown
-- one cataclysm at a time
+- one ZAR-BOMBE at a time
 - operator kill switch
 - reduced-motion alternative
 - automatic recovery phase
@@ -201,7 +203,7 @@ The stream HUD should therefore show a compact rotating legend such as:
 Rose -> Repair
 Current 99-coin gift -> Bridge
 Current 500-coin gift -> Team Shield
-Current premium gift -> Cataclysm
+Current premium gift -> ZAR-BOMBE
 ```
 
 The displayed legend must be generated from the active mapping configuration. It must never pretend that an overlay element itself is a tappable mobile button.
@@ -359,7 +361,7 @@ A complete local demo is accepted when:
 2. likes charge build energy through mock events
 3. one cheap positive gift builds a bridge
 4. one expensive negative gift collapses part of the route
-5. one premium test gift triggers NOEMA Cataclysm
+5. one premium test gift triggers ZAR-BOMBE
 6. the recovery phase allows the team to rebuild
 7. the round can be replayed from the stored command log
 8. the scene runs as a browser source at 60 frames per second

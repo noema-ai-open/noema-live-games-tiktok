@@ -26,32 +26,94 @@ export type LiveEventEnvelope = {
 
 export type GameCommand =
   | {
-      type: "team-energy";
+      type: "add_team_energy";
       amount: number;
       actor?: ViewerIdentity;
     }
   | {
-      type: "boost";
-      strength: number;
+      type: "build_bridge";
+      zoneId: string;
       actor?: ViewerIdentity;
     }
   | {
-      type: "hazard";
+      type: "repair_structure";
+      sectionId?: string;
+      amount: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "place_blocker";
+      x: number;
+      durationTicks: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "place_jump_field";
+      zoneId: string;
+      durationTicks: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "activate_lift";
+      durationTicks: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "group_shield";
+      durationTicks: number;
+      radius?: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "rescue_worker";
+      workerId?: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "area_rescue";
+      x: number;
+      y: number;
+      radius: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "collapse_section";
+      sectionId?: string;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "environment_shift";
+      mode: "wind" | "low_gravity";
+      durationTicks: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "earthquake";
       severity: number;
       actor?: ViewerIdentity;
     }
   | {
-      type: "shield";
-      durationMs: number;
+      type: "tsar_bomb";
       actor?: ViewerIdentity;
+    }
+  | {
+      type: "set_safe_mode";
+      enabled: boolean;
+    }
+  | {
+      type: "set_reduced_motion";
+      enabled: boolean;
     }
   | {
       type: "pause" | "resume" | "reset";
     };
 
-export type GatewayMessage = {
+export type OrderedGameCommand = {
   protocolVersion: typeof PROTOCOL_VERSION;
   sequence: number;
-  sentAt: string;
+  tick: number;
+  actor: ViewerIdentity;
   command: GameCommand;
 };
+
+export type GatewayMessage = OrderedGameCommand;

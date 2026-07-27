@@ -49,9 +49,32 @@ docs                  Architecture and protocol documentation
 - pnpm workspaces
 - Docker
 
+## Offline prototype
+
+The first playable **NOEMA Ascent** prototype lives in `apps/game`. It contains
+the deterministic 30-worker simulation, vertical Phaser runtime, local mock-event
+operator panel, replay export/import and the `ZAR-BOMBE` recovery spectacle.
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open `http://127.0.0.1:4173`. The offline prototype does not connect to TikTok
+or require credentials.
+
+Validation:
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
 ## Status
 
-Early public development scaffold. APIs and file structure may change before the first stable release.
+Playable offline MVP. APIs and file structure may change before the first stable
+live integration.
 
 ## Principles
 
