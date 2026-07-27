@@ -64,10 +64,17 @@ Free engagement must remain relevant. Gifts may amplify or modify the game, but 
 
 ## First playable target
 
-A vertical cooperative climb with checkpoints, hazards and community energy:
+The first game mode is an original cooperative swarm-rescue game called **NOEMA Rescue Run**. It uses the broad idea of guiding many autonomous characters through hazards, but it must use original characters, visual language, level design, names, sounds and mechanics.
 
-- Likes charge team energy.
-- Follows and shares trigger controlled boosts.
-- Gifts trigger configurable abilities or hazards.
-- Viewer names appear only for meaningful actions.
-- The game can run with automated text and sound feedback so the streamer does not need to speak continuously.
+Core loop:
+
+- A group of autonomous runners enters a short obstacle course.
+- The community must rescue at least 70 percent before the round timer expires.
+- Likes charge shared team energy.
+- Chat commands vote for tools such as bridge, blocker, jump field, parachute or portal.
+- Follows and shares trigger controlled support effects.
+- Gifts trigger configurable abilities, protection or hazards.
+- Viewer names appear only for meaningful actions to avoid visual overload.
+- Automated text and sound feedback keep the stream understandable without continuous speaking.
+
+A full round should initially last about four minutes and support pause, safe mode and operator recovery controls.
