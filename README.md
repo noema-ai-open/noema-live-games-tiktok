@@ -1,6 +1,6 @@
 # NOEMA Live Games for TikTok
 
-Interactive TikTok LIVE gaming platform powered by NOEMA.
+Interactive TikTok LIVE gaming platform powered by NOEMA AI.
 
 This public repository contains the game runtime, control panel, event protocol and gateway used to turn TikTok LIVE events into transparent, configurable game actions.
 
@@ -58,6 +58,10 @@ Early public development scaffold. APIs and file structure may change before the
 Practical AI. Human control.
 
 No process injection, DLL hooking, password collection or session-cookie harvesting. The platform is an integration layer, not a complete TikTok client.
+
+## Branding
+
+**Powered by NOEMA AI**
 
 ## License
 
