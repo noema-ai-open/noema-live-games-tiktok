@@ -133,7 +133,7 @@ export class RulesEngine {
     if (resolution.kind === "unknown") {
       this.logUnknownGift(gift.giftId, gift.giftName, now);
       this.publishFeedback(event, observation.total, {
-        icon: "❔",
+        icon: "?",
         effectLabel: "NOCH NICHT ZUGEORDNET",
         tier: "small",
         applied: false,
@@ -142,7 +142,7 @@ export class RulesEngine {
     }
     if (resolution.kind === "disabled") {
       this.publishFeedback(event, observation.total, {
-        icon: "⏸",
+        icon: "×",
         effectLabel: "DEAKTIVIERT",
         tier: "small",
         applied: false,
@@ -181,7 +181,7 @@ export class RulesEngine {
     if (this.isOnCooldown(entry.action, now)) {
       if (republishFeedback) {
         this.publishFeedback(event, total, {
-          icon: "⏳",
+          icon: "…",
           effectLabel: `${definition.label} · ABKLINGZEIT`,
           tier: "small",
           applied: false,

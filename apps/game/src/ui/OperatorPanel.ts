@@ -524,9 +524,12 @@ export class OperatorPanel {
           : "NOEMA Live Bridge"
         : "keine Quelle",
     );
+    const statusLabel = snapshot ? STATUS_LABELS[snapshot.status] : "—";
     this.setText(
       "conn-status",
-      snapshot ? `${STATUS_LABELS[snapshot.status]} · ${snapshot.detail}` : "—",
+      !snapshot || snapshot.detail === statusLabel
+        ? statusLabel
+        : `${statusLabel} · ${snapshot.detail}`,
     );
     this.setText("conn-eps", snapshot ? String(snapshot.eventsPerSecond) : "0");
     this.setText("conn-profile", snapshot?.profile ?? "—");

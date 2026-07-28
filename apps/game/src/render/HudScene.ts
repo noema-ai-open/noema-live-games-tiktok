@@ -319,7 +319,7 @@ export class HudScene extends Phaser.Scene {
         .setOrigin(0, 0.5)
         .setStrokeStyle(2, PALETTE.energy, 0.85);
       const icon = this.add
-        .text(16, 0, "🌹", { fontSize: "24px" })
+        .text(16, 0, "+", { fontSize: "24px" })
         .setOrigin(0, 0.5);
       const title = this.add
         .text(54, -10, "", {

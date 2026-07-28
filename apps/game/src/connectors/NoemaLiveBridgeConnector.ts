@@ -153,7 +153,9 @@ export class NoemaLiveBridgeConnector extends BaseConnector {
       this.publishStatus();
       return;
     }
-    if (frame.kind === "status") {
+    if (frame.kind === "status" && frame.status !== "unknown") {
+      // The bridge only labels its own connect/disconnect events; a status
+      // frame without a label says nothing and must not overwrite the detail.
       this.detail =
         frame.status === "connected"
           ? "Live verbunden"
