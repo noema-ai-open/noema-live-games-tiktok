@@ -1,0 +1,88 @@
+NOEMA Ascent — Interactive LIVE Rescue Game
+===========================================
+
+Starten
+-------
+
+Verknuepfung "NOEMA Ascent" im Startmenue oder auf dem Desktop anklicken.
+
+Es oeffnet sich ein kleines schwarzes Fenster (der lokale Webserver) und
+zusaetzlich der Browser mit der Steuerung. Das schwarze Fenster muss offen
+bleiben, solange gespielt wird. Zum Beenden einfach schliessen.
+
+Im schwarzen Fenster stehen zwei Adressen:
+
+  Operator  http://localhost:4173/?view=operator
+  Stream    http://localhost:4173/?view=stream&autostart=1
+
+Ist Port 4173 belegt, waehlt das Programm automatisch den naechsten freien
+Port. Dann stehen dort andere Nummern.
+
+
+TikTok LIVE Studio
+------------------
+
+1. NOEMA Ascent starten (siehe oben).
+2. In LIVE Studio: Quelle hinzufuegen -> Link
+3. Die Stream-Adresse aus dem schwarzen Fenster einfuegen.
+4. Quellgroesse auf 720 x 1280 stellen.
+
+Die Steuerung (Operator) laesst man daneben im normalen Browser offen. Dort
+sind Rundensteuerung, Safe Mode, Lautstaerke und die Geschenk-Zuordnung. Im
+Stream-Bild ist davon nichts zu sehen.
+
+Fuer OBS: Browser-Quelle, gleiche Adresse, 720 x 1280.
+
+
+Offline testen
+--------------
+
+Im Startbildschirm auf "Offline testen" klicken. Dann laeuft das Spiel ohne
+TikTok-Verbindung mit erzeugten Testereignissen.
+
+
+Mit TikTok verbinden
+--------------------
+
+Dafuer wird die NOEMA TikTok Live Bridge gebraucht. Sie muss auf demselben
+Rechner laufen wie NOEMA Ascent.
+
+1. Bridge starten und dort den oeffentlichen TikTok-Namen eintragen.
+2. In NOEMA Ascent: "Live Bridge verbinden".
+3. Adresse steht standardmaessig auf http://127.0.0.1:8765 — passt normal.
+4. "Verbinden & Runde starten".
+
+NOEMA Ascent fragt niemals nach einem TikTok-Passwort, einem Cookie oder
+einem Zugangstoken. Es gibt kein Benutzerkonto und keine Anmeldung.
+
+
+Falls nichts startet
+--------------------
+
+- Meldung zur Ausfuehrungsrichtlinie: Die Verknuepfung startet PowerShell
+  bereits mit "-ExecutionPolicy Bypass". Wird trotzdem blockiert, ist meist
+  eine Gruppenrichtlinie aktiv.
+- "Zugriff verweigert" beim Start: Ein anderes Programm belegt die Ports
+  4173 bis 4182.
+- Keine Ereignisse trotz verbundener Bridge: Laeuft die Bridge wirklich auf
+  demselben Rechner? Sie ist ueber das Netzwerk absichtlich nicht erreichbar.
+
+
+Datenschutz
+-----------
+
+Alles laeuft lokal auf diesem Rechner. Es wird kein Server im Internet
+kontaktiert. Einstellungen und Geschenk-Zuordnungen liegen im lokalen
+Speicher des Browsers.
+
+
+Projekt unterstuetzen
+---------------------
+
+NOEMA Live Games bleibt kostenlos und oeffentlich nutzbar. KI-Infrastruktur,
+Tests, Grafik und Weiterentwicklung verursachen laufende Kosten. Wer das
+Projekt gerne nutzt oder damit Einnahmen erzielt, kann die weitere
+Entwicklung freiwillig unterstuetzen. Der Link steht im Startbildschirm
+unter "Projekt unterstuetzen".
+
+Powered by NOEMA AI

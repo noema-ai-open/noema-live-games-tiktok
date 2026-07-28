@@ -1,0 +1,130 @@
+name: Windows-Installer bauen
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main", "feat/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Typecheck, Tests, Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  installer:
+    name: Installer
+    needs: checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Version aus package.json bestimmen
+        shell: pwsh
+        run: |
+          $version = (Get-Content "apps/game/package.json" -Raw | ConvertFrom-Json).version
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Keine Versionsnummer in apps/game/package.json gefunden."
+          }
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Baue NOEMA Ascent v$version"
+
+      - name: Spiel bauen
+        run: pnpm install --frozen-lockfile && pnpm build
+        shell: pwsh
+
+      - name: Rauchtest des mitgelieferten Webservers
+        shell: pwsh
+        run: |
+          # Der Installer bringt keine Laufzeitumgebung mit, deshalb muss der
+          # HttpListener-Server hier gegen die echten Build-Dateien laufen.
+          $job = Start-Job -ScriptBlock {
+            param($script, $root)
+            & $script -Root $root -Port 4399 -NoBrowser -View none -StopAfterSeconds 45
+          } -ArgumentList "$PWD/packaging/serve.ps1", "$PWD/apps/game/dist"
+
+          $ready = $false
+          foreach ($attempt in 1..20) {
+            Start-Sleep -Milliseconds 500
+            try {
+              $response = Invoke-WebRequest "http://localhost:4399/?view=stream" -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -eq 200 -and $response.Content -match "NOEMA") {
+                $ready = $true
+                break
+              }
+            } catch { }
+          }
+          if (-not $ready) {
+            Receive-Job $job
+            throw "Der lokale Webserver hat die Startseite nicht ausgeliefert."
+          }
+
+          # Ein Asset muss ebenfalls mit korrektem Content-Type kommen.
+          $asset = Get-ChildItem "apps/game/dist/assets" -Filter "*.js" | Select-Object -First 1
+          $assetResponse = Invoke-WebRequest "http://localhost:4399/assets/$($asset.Name)" -UseBasicParsing -TimeoutSec 5
+          if ($assetResponse.Headers["Content-Type"] -notmatch "javascript") {
+            throw "Falscher Content-Type fuer $($asset.Name): $($assetResponse.Headers["Content-Type"])"
+          }
+
+          # Pfad-Ausbruch muss abgewiesen werden.
+          $blocked = $false
+          try {
+            Invoke-WebRequest "http://localhost:4399/../../package.json" -UseBasicParsing -TimeoutSec 5 | Out-Null
+          } catch {
+            $blocked = $true
+          }
+          if (-not $blocked) { throw "Pfad-Ausbruch wurde nicht blockiert." }
+
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -Force -ErrorAction SilentlyContinue
+          Write-Host "Webserver-Rauchtest bestanden."
+
+      - name: Inno Setup bauen
+        shell: cmd
+        run: |
+          choco install innosetup -y --no-progress
+          "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" packaging\installer.iss
+
+      - name: Versionierten Installer und Pruefsumme erzeugen
+        shell: pwsh
+        run: |
+          $source = "packaging/Output/NOEMA-Ascent-Setup.exe"
+          if (-not (Test-Path $source)) { throw "Installer wurde nicht erzeugt." }
+          $target = "packaging/Output/NOEMA-Ascent-Setup-v$env:APP_VERSION.exe"
+          Copy-Item $source $target -Force
+          $hash = (Get-FileHash $target -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $(Split-Path $target -Leaf)" | Set-Content "packaging/Output/SHA256SUMS.txt" -Encoding ascii
+          Write-Host "Installer: $target"
+          Write-Host "SHA256: $hash"
+
+      - name: Installer als Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: NOEMA-Ascent-Setup-v${{ env.APP_VERSION }}
+          path: |
+            packaging/Output/NOEMA-Ascent-Setup-v*.exe
+            packaging/Output/SHA256SUMS.txt
+          if-no-files-found: error

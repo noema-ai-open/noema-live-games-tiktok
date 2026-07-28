@@ -10,3 +10,6 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+
+# Inno-Setup-Ausgabe
+packaging/Output/

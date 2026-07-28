@@ -21,6 +21,22 @@ out. The premium spectacle is the `ZAR-BOMBE`.
 
 ## Quick start
 
+### Windows (installer)
+
+Download `NOEMA-Ascent-Setup.exe` from the latest build and install it. The
+package contains the built game and a small local web server based on Windows'
+own `System.Net.HttpListener` — no Node.js, no Python, no runtime download.
+
+Start "NOEMA Ascent" from the start menu: a console window opens with the
+operator and stream URLs, and the browser opens the operator view. Keep the
+console window open while playing.
+
+The installer is built on a Windows runner by
+[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)
+and published as a build artifact. No binary is committed to this repository.
+
+### From source
+
 ```bash
 pnpm install
 pnpm dev
@@ -64,8 +80,8 @@ the operator view and shows no technical details.
 
 ### TikTok LIVE Studio
 
-1. `pnpm build` then `pnpm preview` (serves the built app on
-   `http://127.0.0.1:4173`).
+1. Start the installed app, or from source: `pnpm build` then `pnpm preview`
+   (serves the built app on `http://127.0.0.1:4173`).
 2. In LIVE Studio: **Quelle hinzufügen → Link**, paste
    `http://127.0.0.1:4173/?view=stream&autostart=1`.
 3. Set the source size to **720 × 1280**.
@@ -136,6 +152,7 @@ apps/game                 Browser game runtime (Phaser 3 + Vite)
   src/simulation          Deterministic fixed-step simulation
   src/ui                  Start screen, operator panel, mapping editor
 packages/event-protocol   Shared live-event and game-command contracts
+packaging                 Windows installer script and local static server
 docs                      Architecture, game design, integration, visuals
 ```
 
