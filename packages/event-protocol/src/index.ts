@@ -14,15 +14,53 @@ export type LiveEventKind =
   | "gift"
   | "subscription";
 
+export type LiveEventSource = "tiktok" | "mock" | "operator" | "noema-bridge";
+
 export type LiveEventEnvelope = {
   protocolVersion: typeof PROTOCOL_VERSION;
   id: string;
-  source: "tiktok" | "mock" | "operator";
+  source: LiveEventSource;
   kind: LiveEventKind;
   occurredAt: string;
   actor: ViewerIdentity;
   payload: Record<string, unknown>;
 };
+
+/**
+ * Gift metadata carried by a normalized live event. Only `giftName` is
+ * guaranteed by every connector; ids, coin values and combo markers are
+ * optional because upstream connectors do not all report them.
+ */
+export type NormalizedGiftPayload = {
+  giftId: string;
+  giftName: string;
+  coinValue: number;
+  repeatCount: number;
+  comboId?: string;
+  comboFinal?: boolean;
+};
+
+/**
+ * The only event shape the game runtime ever sees. Raw bridge or TikTok
+ * payloads are converted into this contract inside a connector.
+ */
+export type NormalizedLiveEvent = {
+  protocolVersion: typeof PROTOCOL_VERSION;
+  eventId: string;
+  source: LiveEventSource;
+  kind: LiveEventKind;
+  /** Milliseconds since epoch, taken from the connector payload when present. */
+  timestamp: number;
+  /** Local arrival time, used for combo windows and latency reporting. */
+  receivedAt: number;
+  actor: ViewerIdentity;
+  gift?: NormalizedGiftPayload;
+  likeCount?: number;
+  message?: string;
+};
+
+/** Dispatch class for ordered commands. Critical never waits behind low. */
+export type CommandPriority = "critical" | "normal" | "low";
 
 export type GameCommand =
   | {
