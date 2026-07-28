@@ -13,3 +13,6 @@ Thumbs.db
 
 # Inno-Setup-Ausgabe
 packaging/Output/
+
+# Geparkte Arbeitsstaende
+.wip/
