@@ -1,37 +1,81 @@
 import type { GameCommand } from "@noema/event-protocol";
+import type { AppSettings } from "../config/appSettings";
 import { TICKS } from "../config/gameConfig";
+import { SUPPORT_URL } from "../config/viewMode";
+import type { ConnectionSnapshot } from "../connectors/connectionTypes";
+import type { ConnectorManager } from "../connectors/ConnectorManager";
+import { MOCK_VIEWERS } from "../connectors/MockConnector";
+import type { GiftCatalogConfig } from "../gifts/giftCatalog";
+import type { RulesEngine } from "../gifts/RulesEngine";
 import type { ReplayService } from "../replay/ReplayService";
 import type { Simulation } from "../simulation/Simulation";
 import type { AudioSystem } from "../systems/AudioSystem";
-import {
-  getMockGift,
-  MOCK_ACTOR,
-  type MockActionId,
-} from "../systems/giftMapping";
+import type { LiveSession } from "../systems/LiveSession";
+import { GiftMappingEditor } from "./GiftMappingEditor";
+import { escapeHtml } from "./StartScreen";
 
+export type OperatorPanelDeps = {
+  simulation: Simulation;
+  replays: ReplayService;
+  audio: AudioSystem;
+  connectors: ConnectorManager;
+  rules: RulesEngine;
+  live: LiveSession;
+  settings: AppSettings;
+  onSettingsChange: (settings: AppSettings) => void;
+  onCatalogChange: (catalog: GiftCatalogConfig) => void;
+  onBackToStart: () => void;
+};
+
+type TestGift = {
+  id: string;
+  label: string;
+  tier: string;
+  giftName: string;
+  coins: number;
+};
+
+/** Test gifts mirror the default catalog rows so the buttons stay meaningful. */
+const TEST_GIFTS: readonly TestGift[] = [
+  { id: "rose", label: "Rose", tier: "1–9 Coins", giftName: "Rose", coins: 1 },
+  { id: "bridge", label: "Bridge Crate", tier: "10–99", giftName: "Bridge Crate", coins: 30 },
+  { id: "jump", label: "Jump Pad", tier: "10–99", giftName: "Jump Pad", coins: 45 },
+  { id: "lift", label: "Lift Core", tier: "100–499", giftName: "Lift Core", coins: 199 },
+  { id: "aegis", label: "Team Aegis", tier: "500–1.999", giftName: "Team Aegis", coins: 999 },
+  { id: "wind", label: "Crosswind", tier: "Sabotage", giftName: "Crosswind", coins: 500 },
+  { id: "fault", label: "Fault Line", tier: "Sabotage", giftName: "Fault Line", coins: 3000 },
+] as const;
+
+const STATUS_LABELS: Record<ConnectionSnapshot["status"], string> = {
+  offline: "Getrennt",
+  connecting: "Verbinde",
+  connected: "Live verbunden",
+  reconnecting: "Reconnect",
+  error: "Fehler",
+};
+
+/**
+ * Local operator workspace. Everything technical lives here so the stream view
+ * stays clean.
+ */
 export class OperatorPanel {
   private readonly root: HTMLElement;
-  private readonly simulation: Simulation;
-  private readonly replays: ReplayService;
-  private readonly audio: AudioSystem;
+  private readonly deps: OperatorPanelDeps;
   private readonly intervalId: number;
+  private mappingEditor: GiftMappingEditor | null = null;
   private clearedBeforeSequence = 0;
   private lastTerminalTick = -1;
+  private snapshot: ConnectionSnapshot | null = null;
+  private streakCounter = 0;
 
-  constructor(
-    root: HTMLElement,
-    simulation: Simulation,
-    replays: ReplayService,
-    audio: AudioSystem,
-  ) {
+  constructor(root: HTMLElement, deps: OperatorPanelDeps) {
     this.root = root;
-    this.simulation = simulation;
-    this.replays = replays;
-    this.audio = audio;
+    this.deps = deps;
     this.root.innerHTML = this.template();
+    this.mountMappingEditor();
     this.bindEvents();
     this.render();
-    this.intervalId = window.setInterval(() => this.render(), 160);
+    this.intervalId = window.setInterval(() => this.render(), 200);
   }
 
   destroy(): void {
@@ -39,97 +83,149 @@ export class OperatorPanel {
     this.root.replaceChildren();
   }
 
+  setSnapshot(snapshot: ConnectionSnapshot): void {
+    this.snapshot = snapshot;
+  }
+
   private template(): string {
     return `
       <section class="panel-heading">
         <div>
-          <p class="eyebrow">LOCAL MOCK ADAPTER</p>
+          <p class="eyebrow">OPERATOR VIEW · LOKAL</p>
           <h1>NOEMA Ascent Control</h1>
         </div>
-        <span class="offline-badge">OFFLINE</span>
+        <button class="ghost-button" data-action="home">Startbildschirm</button>
       </section>
 
-      <section class="status-grid" aria-label="Simulation status">
-        <div><span>State</span><strong data-status="state">ready</strong></div>
+      <section class="control-section">
+        <div class="section-title"><span>Verbindung</span><small data-status="connector">—</small></div>
+        <div class="status-grid two">
+          <div><span>Status</span><strong data-status="conn-status">—</strong></div>
+          <div><span>Ereignisse/s</span><strong data-status="conn-eps">0</strong></div>
+          <div><span>Profil</span><strong data-status="conn-profile">—</strong></div>
+          <div><span>Letztes Ereignis</span><strong data-status="conn-last">—</strong></div>
+        </div>
+        <div class="button-grid two">
+          <button data-action="use-mock">Offline-Quelle</button>
+          <button data-action="use-bridge">Live Bridge</button>
+        </div>
+        <label class="seed-field">Bridge-Adresse
+          <input data-input="address" type="text" spellcheck="false" value="${escapeHtml(this.deps.settings.bridgeAddress)}" />
+        </label>
+        <div class="button-grid two compact">
+          <button data-action="ambient">Zufalls-Ereignisse an/aus</button>
+          <button data-action="disconnect">Trennen</button>
+        </div>
+      </section>
+
+      <section class="status-grid" aria-label="Simulationsstatus">
+        <div><span>Zustand</span><strong data-status="state">ready</strong></div>
         <div><span>Tick</span><strong data-status="tick">0</strong></div>
         <div><span>Seed</span><strong data-status="seed">0</strong></div>
-        <div><span>Workers</span><strong data-status="workers">30</strong></div>
-        <div><span>Rescued / Lost</span><strong data-status="result-counts">0 / 0</strong></div>
-        <div><span>Energy</span><strong data-status="energy">15%</strong></div>
+        <div><span>Aktiv</span><strong data-status="workers">30</strong></div>
+        <div><span>Gerettet / Verloren</span><strong data-status="result-counts">0 / 0</strong></div>
+        <div><span>Energie</span><strong data-status="energy">15%</strong></div>
       </section>
 
       <section class="control-section">
-        <div class="section-title"><span>Round</span><small data-status="round-result">Not started</small></div>
-        <label class="seed-field">Seed <input data-input="seed" type="number" value="${this.simulation.state.seed}" /></label>
+        <div class="section-title"><span>Runde</span><small data-status="round-result">Nicht gestartet</small></div>
+        <label class="seed-field">Seed <input data-input="seed" type="number" value="${this.deps.simulation.state.seed}" /></label>
         <div class="button-grid four">
-          <button class="primary" data-action="start">Start round</button>
+          <button class="primary" data-action="start">Runde starten</button>
           <button data-command="pause">Pause</button>
-          <button data-command="resume">Resume</button>
-          <button class="danger-soft" data-action="reset">Reset</button>
+          <button data-command="resume">Weiter</button>
+          <button class="danger-soft" data-action="reset">Zurücksetzen</button>
         </div>
         <div class="toggle-row">
-          <label><input data-toggle="safe" type="checkbox" /> Safe mode</label>
-          <label><input data-toggle="motion" type="checkbox" /> Reduced motion</label>
-          <label><input data-toggle="mute" type="checkbox" /> Mute</label>
+          <label><input data-toggle="safe" type="checkbox" /> Safe Mode</label>
+          <label><input data-toggle="motion" type="checkbox" /> Reduced Motion</label>
+          <label><input data-toggle="mute" type="checkbox" /> Stumm</label>
         </div>
+        <label class="slider-field">Lautstärke
+          <input data-input="volume" type="range" min="0" max="100" value="${Math.round(this.deps.settings.masterVolume * 100)}" />
+        </label>
       </section>
 
       <section class="control-section">
-        <div class="section-title"><span>Free interaction</span><small>Mock events</small></div>
+        <div class="section-title"><span>Testereignisse</span><small>Erzeugen echte Live-Events</small></div>
         <div class="button-grid three">
-          <button data-action="likes">+ Likes</button>
-          <button data-action="follow">Follow</button>
-          <button data-action="share">Share</button>
+          <button data-free="like">+ Likes</button>
+          <button data-free="follow">Follow</button>
+          <button data-free="share">Share</button>
         </div>
-      </section>
-
-      <section class="control-section">
-        <div class="section-title"><span>Gift tiers</span><small>Configurable mock IDs</small></div>
         <div class="gift-grid">
-          <button data-gift="cheap_support"><b>1–9</b><span>Cheap support</span></button>
-          <button data-gift="standard_support"><b>10–99</b><span>Standard support</span></button>
-          <button data-gift="strong_support"><b>100–499</b><span>Strong support</span></button>
-          <button data-gift="premium_support"><b>500–1,999</b><span>Premium support</span></button>
-          <button class="sabotage" data-gift="minor_sabotage"><b>300–999</b><span>Minor sabotage</span></button>
-          <button class="sabotage" data-gift="major_sabotage"><b>2,000–9,999</b><span>Major sabotage</span></button>
+          ${TEST_GIFTS.map(
+            (gift) => `
+            <button data-test-gift="${gift.id}"><b>${escapeHtml(gift.label)}</b><span>${escapeHtml(gift.tier)}</span></button>`,
+          ).join("")}
         </div>
-        <button class="tsar-button" data-gift="tsar_bomb">
-          <span>⚠</span><b>ZAR-BOMBE</b><small>Highest destructive tier · global cooldown</small>
+        <div class="button-grid two compact">
+          <button data-action="streak">Rose-Serie ×5 senden</button>
+          <button data-action="duplicate">Doppeltes Ereignis senden</button>
+        </div>
+        <button class="tsar-button" data-test-gift="tsar">
+          <span>⚠</span><b>ZAR-BOMBE</b><small>Höchste Stufe · globale Abklingzeit</small>
         </button>
       </section>
 
       <section class="control-section">
-        <div class="section-title"><span>Tool diagnostics</span><small>Ordered commands</small></div>
+        <div class="section-title"><span>Werkzeug-Diagnose</span><small>Direkte Befehle</small></div>
         <div class="button-grid four compact">
-          <button data-action="jump">Jump field</button>
-          <button data-action="blocker">Blocker</button>
-          <button data-action="rescue">Rescue one</button>
-          <button data-action="area-rescue">Area rescue</button>
+          <button data-action="jump">Sprungfeld</button>
+          <button data-action="blocker">Umlenkung</button>
+          <button data-action="rescue">Rettung</button>
+          <button data-action="area-rescue">Flächenrettung</button>
         </div>
       </section>
 
-      <section class="recovery-strip" data-status="recovery">Recovery inactive</section>
+      <section class="recovery-strip" data-status="recovery">Wiederaufbau inaktiv</section>
       <section class="cooldown-list" data-status="cooldowns"></section>
 
+      <section class="control-section" data-mapping></section>
+
       <section class="control-section">
-        <div class="section-title"><span>Replay</span><small data-status="replay-result">No comparison yet</small></div>
+        <div class="section-title"><span>Replay</span><small data-status="replay-result">Kein Vergleich</small></div>
         <div class="button-grid three">
-          <button data-action="replay">Replay last round</button>
-          <button data-action="copy">Copy replay JSON</button>
-          <button data-action="clear">Clear log</button>
+          <button data-action="replay">Letzte Runde nachspielen</button>
+          <button data-action="copy">Replay-JSON kopieren</button>
+          <button data-action="clear">Log leeren</button>
         </div>
-        <textarea data-input="replay" rows="5" spellcheck="false" placeholder="Paste replay JSON to import"></textarea>
+        <textarea data-input="replay" rows="4" spellcheck="false" placeholder="Replay-JSON einfügen"></textarea>
         <div class="button-grid two compact">
-          <button data-action="export">Export to editor</button>
-          <button data-action="import">Import replay JSON</button>
+          <button data-action="export">In Editor exportieren</button>
+          <button data-action="import">Replay-JSON importieren</button>
         </div>
       </section>
 
       <section class="log-section">
-        <div class="section-title"><span>Ordered command log</span><small data-status="command-count">0 commands</small></div>
+        <div class="section-title"><span>Live-Ereignisse</span><small data-status="dupes">0 Duplikate verworfen</small></div>
+        <ol class="command-log" data-status="event-log"></ol>
+      </section>
+
+      <section class="log-section">
+        <div class="section-title"><span>Befehlsprotokoll</span><small data-status="command-count">0 Befehle</small></div>
         <ol class="command-log" data-status="command-log"></ol>
       </section>
+
+      <section class="support-section">
+        <p>
+          NOEMA Live Games bleibt kostenlos und öffentlich nutzbar. KI-Infrastruktur,
+          Tests, Grafik und Weiterentwicklung verursachen laufende Kosten. Wer das
+          Projekt gerne nutzt oder damit Einnahmen erzielt, kann die weitere
+          Entwicklung freiwillig unterstützen.
+        </p>
+        <a href="${SUPPORT_URL}" target="_blank" rel="noopener noreferrer">Projekt unterstützen</a>
+      </section>
     `;
+  }
+
+  private mountMappingEditor(): void {
+    const host = this.root.querySelector<HTMLElement>("[data-mapping]");
+    if (!host) return;
+    this.mappingEditor = new GiftMappingEditor(host, this.deps.rules.getCatalog(), {
+      onChange: (catalog) => this.deps.onCatalogChange(catalog),
+      getUnknownGifts: () => this.deps.rules.getUnknownGifts(),
+    });
   }
 
   private bindEvents(): void {
@@ -138,13 +234,19 @@ export class OperatorPanel {
         "button",
       );
       if (!target) return;
-      const command = target.dataset.command;
-      const action = target.dataset.action;
-      const gift = target.dataset.gift as MockActionId | undefined;
+      this.deps.audio.unlock();
+
+      const command = target.dataset["command"];
+      const action = target.dataset["action"];
+      const free = target.dataset["free"];
+      const testGift = target.dataset["testGift"];
+
       if (command === "pause" || command === "resume") {
         this.submit({ type: command });
-      } else if (gift) {
-        this.triggerGift(gift);
+      } else if (free) {
+        this.sendFree(free);
+      } else if (testGift) {
+        this.sendTestGift(testGift);
       } else if (action) {
         void this.handleAction(action);
       }
@@ -152,194 +254,360 @@ export class OperatorPanel {
 
     this.root.addEventListener("change", (event) => {
       const input = event.target as HTMLInputElement;
-      if (input.dataset.toggle === "safe") {
+      const toggle = input.dataset["toggle"];
+      if (toggle === "safe") {
         this.submit({ type: "set_safe_mode", enabled: input.checked });
-      } else if (input.dataset.toggle === "motion") {
+        this.updateSettings({ safeMode: input.checked });
+      } else if (toggle === "motion") {
         this.submit({ type: "set_reduced_motion", enabled: input.checked });
-      } else if (input.dataset.toggle === "mute") {
-        this.audio.setMuted(input.checked);
+        this.updateSettings({ reducedMotion: input.checked });
+      } else if (toggle === "mute") {
+        this.deps.audio.setMuted(input.checked);
+        this.updateSettings({ muted: input.checked });
+      } else if (input.dataset["input"] === "address") {
+        const address = input.value.trim();
+        this.deps.connectors.bridge.setAddress(address);
+        this.updateSettings({ bridgeAddress: address });
       }
+    });
+
+    this.root.addEventListener("input", (event) => {
+      const input = event.target as HTMLInputElement;
+      if (input.dataset["input"] !== "volume") return;
+      const value = Number(input.value) / 100;
+      this.deps.audio.setVolume("master", value);
+      this.updateSettings({ masterVolume: value });
     });
   }
 
-  private submit(command: GameCommand): void {
-    this.simulation.submit(command);
+  private updateSettings(patch: Partial<AppSettings>): void {
+    this.deps.onSettingsChange({ ...this.deps.settings, ...patch });
   }
 
-  private triggerGift(id: MockActionId): void {
-    const mapping = getMockGift(id);
-    if (!mapping) return;
-    this.submit(mapping.command(MOCK_ACTOR));
-    this.audio.play(id.includes("sabotage") ? "earthquake" : "support");
+  private submit(command: GameCommand): void {
+    this.deps.simulation.submit(command);
+  }
+
+  private sendFree(kind: string): void {
+    if (kind === "like") {
+      this.deps.connectors.mock.injectSimple("like", MOCK_VIEWERS[1]!, 12);
+      return;
+    }
+    if (kind === "follow") {
+      this.deps.connectors.mock.injectSimple("follow", MOCK_VIEWERS[2]!);
+      return;
+    }
+    this.deps.connectors.mock.injectSimple("share", MOCK_VIEWERS[3]!);
+  }
+
+  private sendTestGift(id: string): void {
+    this.deps.audio.play("gift");
+    if (id === "tsar") {
+      this.deps.connectors.mock.injectGift(
+        {
+          giftId: "mock_tsar_bomb",
+          giftName: "ZAR-BOMBE Testgeschenk",
+          coinValue: 10000,
+          comboFinal: true,
+        },
+        MOCK_VIEWERS[0]!,
+      );
+      return;
+    }
+    const gift = TEST_GIFTS.find((item) => item.id === id);
+    if (!gift) return;
+    this.deps.connectors.mock.injectGift(
+      {
+        giftId: `name:${gift.giftName.toLowerCase().replace(/\s+/g, "-")}`,
+        giftName: gift.giftName,
+        coinValue: gift.coins,
+        comboFinal: true,
+      },
+      MOCK_VIEWERS[0]!,
+    );
+  }
+
+  private sendStreak(): void {
+    this.streakCounter += 1;
+    const comboId = `test-streak-${this.streakCounter}`;
+    for (let index = 1; index <= 5; index += 1) {
+      window.setTimeout(() => {
+        this.deps.connectors.mock.injectGift(
+          {
+            giftId: "name:rose",
+            giftName: "Rose",
+            coinValue: 1,
+            repeatCount: index,
+            comboId,
+            ...(index === 5 ? { comboFinal: true } : {}),
+          },
+          MOCK_VIEWERS[1]!,
+          `${comboId}-${index}`,
+        );
+      }, index * 180);
+    }
+  }
+
+  private sendDuplicate(): void {
+    const eventId = `duplicate-${Date.now()}`;
+    for (let index = 0; index < 2; index += 1) {
+      this.deps.connectors.mock.injectGift(
+        {
+          giftId: "name:bridge-crate",
+          giftName: "Bridge Crate",
+          coinValue: 30,
+          comboFinal: true,
+        },
+        MOCK_VIEWERS[2]!,
+        eventId,
+      );
+    }
   }
 
   private async handleAction(action: string): Promise<void> {
-    if (action === "start") {
-      this.captureCurrentRound();
-      const seedInput = this.root.querySelector<HTMLInputElement>(
-        '[data-input="seed"]',
-      );
-      const seed = Number(seedInput?.value ?? this.simulation.state.seed);
-      this.simulation.startRound(Number.isFinite(seed) ? seed >>> 0 : undefined);
-      return;
+    const simulation = this.deps.simulation;
+    switch (action) {
+      case "home":
+        this.deps.onBackToStart();
+        return;
+      case "use-mock":
+        this.deps.connectors.use("mock");
+        this.updateSettings({ lastConnector: "mock" });
+        return;
+      case "use-bridge":
+        this.deps.connectors.bridge.setAddress(this.addressValue());
+        this.deps.connectors.use("noema-bridge");
+        this.updateSettings({
+          lastConnector: "noema-bridge",
+          bridgeAddress: this.addressValue(),
+        });
+        return;
+      case "disconnect":
+        this.deps.connectors.stop();
+        return;
+      case "ambient":
+        if (this.deps.connectors.mock.isAmbientRunning()) {
+          this.deps.connectors.mock.stopAmbient();
+        } else {
+          this.deps.connectors.mock.startAmbient();
+        }
+        return;
+      case "start": {
+        this.captureCurrentRound();
+        const seedInput = this.root.querySelector<HTMLInputElement>(
+          '[data-input="seed"]',
+        );
+        const seed = Number(seedInput?.value ?? simulation.state.seed);
+        this.deps.rules.reset();
+        simulation.startRound(Number.isFinite(seed) ? seed >>> 0 : undefined);
+        this.applyPersistentToggles();
+        return;
+      }
+      case "reset":
+        this.captureCurrentRound();
+        this.deps.rules.reset();
+        this.submit({ type: "reset" });
+        return;
+      case "streak":
+        this.sendStreak();
+        return;
+      case "duplicate":
+        this.sendDuplicate();
+        return;
+      case "jump":
+        this.submit({
+          type: "place_jump_field",
+          zoneId: "zone-1",
+          durationTicks: TICKS.second * 15,
+        });
+        return;
+      case "blocker":
+        this.submit({
+          type: "place_blocker",
+          x: 0.4,
+          durationTicks: TICKS.second * 8,
+        });
+        return;
+      case "rescue":
+        this.submit({ type: "rescue_worker" });
+        return;
+      case "area-rescue":
+        this.submit({ type: "area_rescue", x: 360, y: 860, radius: 360 });
+        return;
+      case "clear":
+        this.clearedBeforeSequence =
+          simulation.commandQueue.getNextSequence() - 1;
+        simulation.clearEventFeed();
+        return;
+      case "export": {
+        const editor = this.replayEditor();
+        if (editor) editor.value = this.deps.replays.exportJson(simulation);
+        return;
+      }
+      case "copy": {
+        const json = this.deps.replays.exportJson(simulation);
+        await navigator.clipboard.writeText(json);
+        this.setText("replay-result", "Replay-JSON kopiert");
+        return;
+      }
+      case "import": {
+        const editor = this.replayEditor();
+        if (!editor?.value.trim()) return;
+        const replay = this.deps.replays.importJson(editor.value);
+        this.setText("replay-result", `${replay.commands.length} Befehle geladen`);
+        return;
+      }
+      case "replay": {
+        const replay =
+          this.deps.replays.getLastReplay() ??
+          this.deps.replays.capture(simulation);
+        const comparison = this.deps.replays.replay(replay);
+        this.setText(
+          "replay-result",
+          comparison.matches
+            ? `Deterministisch · ${comparison.result.hash}`
+            : `Abweichung · ${comparison.result.hash}`,
+        );
+        return;
+      }
+      default:
+        return;
     }
-    if (action === "reset") {
-      this.captureCurrentRound();
-      this.submit({ type: "reset" });
-      return;
+  }
+
+  /** Safe mode and reduced motion survive a round restart. */
+  private applyPersistentToggles(): void {
+    const settings = this.deps.settings;
+    if (settings.safeMode) {
+      this.submit({ type: "set_safe_mode", enabled: true });
     }
-    if (action === "likes") {
-      this.submit({ type: "add_team_energy", amount: 8, actor: MOCK_ACTOR });
-      return;
+    if (settings.reducedMotion) {
+      this.submit({ type: "set_reduced_motion", enabled: true });
     }
-    if (action === "follow") {
-      this.submit({
-        type: "group_shield",
-        durationTicks: TICKS.second * 4,
-        radius: 110,
-        actor: MOCK_ACTOR,
-      });
-      return;
-    }
-    if (action === "share") {
-      this.submit({ type: "add_team_energy", amount: 14, actor: MOCK_ACTOR });
-      return;
-    }
-    if (action === "jump") {
-      this.submit({
-        type: "place_jump_field",
-        zoneId: "zone-1",
-        durationTicks: TICKS.second * 15,
-      });
-      return;
-    }
-    if (action === "blocker") {
-      this.submit({
-        type: "place_blocker",
-        x: 0.4,
-        durationTicks: TICKS.second * 8,
-      });
-      return;
-    }
-    if (action === "rescue") {
-      this.submit({ type: "rescue_worker" });
-      return;
-    }
-    if (action === "area-rescue") {
-      this.submit({ type: "area_rescue", x: 360, y: 860, radius: 360 });
-      return;
-    }
-    if (action === "clear") {
-      this.clearedBeforeSequence =
-        this.simulation.commandQueue.getNextSequence() - 1;
-      this.simulation.clearEventFeed();
-      return;
-    }
-    if (action === "export") {
-      const editor = this.root.querySelector<HTMLTextAreaElement>(
-        '[data-input="replay"]',
-      );
-      if (editor) editor.value = this.replays.exportJson(this.simulation);
-      return;
-    }
-    if (action === "copy") {
-      const json = this.replays.exportJson(this.simulation);
-      await navigator.clipboard.writeText(json);
-      this.setText("replay-result", "Replay JSON copied");
-      return;
-    }
-    if (action === "import") {
-      const editor = this.root.querySelector<HTMLTextAreaElement>(
-        '[data-input="replay"]',
-      );
-      if (!editor?.value.trim()) return;
-      const replay = this.replays.importJson(editor.value);
-      this.setText(
-        "replay-result",
-        `Imported ${replay.commands.length} commands`,
-      );
-      return;
-    }
-    if (action === "replay") {
-      const replay =
-        this.replays.getLastReplay() ?? this.replays.capture(this.simulation);
-      const comparison = this.replays.replay(replay);
-      this.setText(
-        "replay-result",
-        comparison.matches
-          ? `Deterministic match · ${comparison.result.hash}`
-          : `Mismatch · ${comparison.result.hash}`,
-      );
-    }
+  }
+
+  private addressValue(): string {
+    const input = this.root.querySelector<HTMLInputElement>(
+      '[data-input="address"]',
+    );
+    return input?.value.trim() || this.deps.settings.bridgeAddress;
+  }
+
+  private replayEditor(): HTMLTextAreaElement | null {
+    return this.root.querySelector<HTMLTextAreaElement>('[data-input="replay"]');
   }
 
   private captureCurrentRound(): void {
-    if (this.simulation.state.tick > 0) this.replays.capture(this.simulation);
+    if (this.deps.simulation.state.tick > 0) {
+      this.deps.replays.capture(this.deps.simulation);
+    }
   }
 
   private render(): void {
-    const state = this.simulation.state;
+    const simulation = this.deps.simulation;
+    const state = simulation.state;
+
     if (
       (state.roundStatus === "success" || state.roundStatus === "failure") &&
       this.lastTerminalTick !== state.tick
     ) {
-      this.replays.capture(this.simulation);
+      this.deps.replays.capture(simulation);
       this.lastTerminalTick = state.tick;
     }
+
+    const snapshot = this.snapshot;
+    this.setText(
+      "connector",
+      snapshot
+        ? snapshot.connectorId === "mock"
+          ? "Offline-Quelle"
+          : "NOEMA Live Bridge"
+        : "keine Quelle",
+    );
+    this.setText(
+      "conn-status",
+      snapshot ? `${STATUS_LABELS[snapshot.status]} · ${snapshot.detail}` : "—",
+    );
+    this.setText("conn-eps", snapshot ? String(snapshot.eventsPerSecond) : "0");
+    this.setText("conn-profile", snapshot?.profile ?? "—");
+    this.setText("conn-last", snapshot?.lastEventLabel ?? "—");
 
     this.setText("state", state.roundStatus.toUpperCase());
     this.setText("tick", String(state.tick));
     this.setText("seed", String(state.seed));
-    this.setText("workers", String(this.simulation.getActiveCount()));
-    this.setText(
-      "result-counts",
-      `${state.rescuedCount} / ${state.lostCount}`,
-    );
+    this.setText("workers", String(simulation.getActiveCount()));
+    this.setText("result-counts", `${state.rescuedCount} / ${state.lostCount}`);
     this.setText("energy", `${Math.round(state.teamEnergy)}%`);
     this.setText(
       "round-result",
-      `${state.roundStatus.toUpperCase()} · ${state.rescuedCount} rescued`,
+      `${state.roundStatus.toUpperCase()} · ${state.rescuedCount} gerettet`,
     );
     this.setText(
       "recovery",
       state.tsarBomb.phase === "recovery"
-        ? `TEAM REBUILD · ${Math.ceil((state.tsarBomb.recoveryUntilTick - state.tick) / TICKS.second)}s · helpful repair x${state.recoveryMultiplier}`
-        : "Recovery inactive",
-    );
-
-    const cooldown = Math.max(
-      0,
-      state.tsarBomb.cooldownUntilTick - state.tick,
+        ? `TEAM REBUILD · ${Math.ceil((state.tsarBomb.recoveryUntilTick - state.tick) / TICKS.second)}s · Reparatur ×${state.recoveryMultiplier}`
+        : "Wiederaufbau inaktiv",
     );
     this.setText(
       "cooldowns",
-      `ZAR-BOMBE ${Math.ceil(cooldown / TICKS.second)}s  ·  Shield ${Math.ceil(Math.max(0, state.shieldUntilTick - state.tick) / TICKS.second)}s  ·  Lift ${Math.ceil(Math.max(0, state.liftActiveUntilTick - state.tick) / TICKS.second)}s  ·  Environment ${state.environmentMode}`,
+      `ZAR-BOMBE ${Math.ceil(Math.max(0, state.tsarBomb.cooldownUntilTick - state.tick) / TICKS.second)}s · Schild ${Math.ceil(Math.max(0, state.shieldUntilTick - state.tick) / TICKS.second)}s · Lift ${Math.ceil(Math.max(0, state.liftActiveUntilTick - state.tick) / TICKS.second)}s · Umwelt ${state.environmentMode}`,
+    );
+    this.setText(
+      "dupes",
+      `${this.deps.rules.getDroppedDuplicates()} Duplikate verworfen`,
     );
 
-    const commands = this.simulation.commandHistory.filter(
+    this.renderEventLog();
+    this.renderCommandLog();
+    this.mappingEditor?.refreshUnknown();
+  }
+
+  private renderEventLog(): void {
+    const list = this.root.querySelector<HTMLOListElement>(
+      '[data-status="event-log"]',
+    );
+    if (!list) return;
+    const events = [...this.deps.live.getRecentEvents()].reverse().slice(0, 30);
+    list.replaceChildren(
+      ...events.map((event) => {
+        const row = document.createElement("li");
+        const kind = document.createElement("b");
+        kind.textContent = event.kind;
+        const detail = document.createElement("span");
+        const name = event.actor.displayName ?? event.actor.username;
+        detail.textContent = event.gift
+          ? `${name} · ${event.gift.giftName} ×${event.gift.repeatCount}`
+          : `${name}${event.likeCount ? ` · ${event.likeCount} Likes` : ""}`;
+        row.append(kind, detail);
+        return row;
+      }),
+    );
+  }
+
+  private renderCommandLog(): void {
+    const commands = this.deps.simulation.commandHistory.filter(
       (item) => item.sequence > this.clearedBeforeSequence,
     );
-    this.setText("command-count", `${commands.length} commands`);
+    this.setText("command-count", `${commands.length} Befehle`);
     const log = this.root.querySelector<HTMLOListElement>(
       '[data-status="command-log"]',
     );
-    if (log) {
-      log.replaceChildren(
-        ...commands
-          .slice()
-          .reverse()
-          .slice(0, 80)
-          .map((item) => {
-            const row = document.createElement("li");
-            const sequence = document.createElement("b");
-            sequence.textContent = `#${item.sequence}`;
-            const detail = document.createElement("span");
-            detail.textContent = `t${item.tick} · ${item.command.type} · ${item.actor.displayName ?? item.actor.username}`;
-            row.append(sequence, detail);
-            return row;
-          }),
-      );
-    }
+    if (!log) return;
+    log.replaceChildren(
+      ...commands
+        .slice()
+        .reverse()
+        .slice(0, 60)
+        .map((item) => {
+          const row = document.createElement("li");
+          const sequence = document.createElement("b");
+          sequence.textContent = `#${item.sequence}`;
+          const detail = document.createElement("span");
+          detail.textContent = `t${item.tick} · ${item.command.type} · ${item.actor.displayName ?? item.actor.username}`;
+          row.append(sequence, detail);
+          return row;
+        }),
+    );
   }
 
   private setText(key: string, value: string): void {

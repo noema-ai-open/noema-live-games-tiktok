@@ -47,7 +47,7 @@ export const ACTION_DEFINITIONS: Readonly<
   none: {
     id: "none",
     label: "Keine Wirkung",
-    icon: "•",
+    icon: "·",
     category: "free",
     priority: "low",
     defaultCooldownSeconds: 0,
@@ -56,7 +56,7 @@ export const ACTION_DEFINITIONS: Readonly<
   team_energy: {
     id: "team_energy",
     label: "+ TEAM-ENERGIE",
-    icon: "⚡",
+    icon: "▲",
     category: "free",
     priority: "low",
     defaultCooldownSeconds: 0,
@@ -69,7 +69,7 @@ export const ACTION_DEFINITIONS: Readonly<
   repair: {
     id: "repair",
     label: "REPARATUR",
-    icon: "🌹",
+    icon: "+",
     category: "support",
     priority: "normal",
     defaultCooldownSeconds: 0,
@@ -82,7 +82,7 @@ export const ACTION_DEFINITIONS: Readonly<
   bridge: {
     id: "bridge",
     label: "BRÜCKE",
-    icon: "🌉",
+    icon: "=",
     category: "support",
     priority: "normal",
     defaultCooldownSeconds: 4,
@@ -95,7 +95,7 @@ export const ACTION_DEFINITIONS: Readonly<
   jump_field: {
     id: "jump_field",
     label: "SPRUNGFELD",
-    icon: "⤴",
+    icon: "↑",
     category: "support",
     priority: "normal",
     defaultCooldownSeconds: 4,
@@ -109,7 +109,7 @@ export const ACTION_DEFINITIONS: Readonly<
   lift: {
     id: "lift",
     label: "LIFT-OVERDRIVE",
-    icon: "🛗",
+    icon: "↕",
     category: "support",
     priority: "normal",
     defaultCooldownSeconds: 6,
@@ -122,7 +122,7 @@ export const ACTION_DEFINITIONS: Readonly<
   team_shield: {
     id: "team_shield",
     label: "TEAM-SCHILD",
-    icon: "🛡",
+    icon: "◆",
     category: "support",
     priority: "critical",
     defaultCooldownSeconds: 8,
@@ -135,7 +135,7 @@ export const ACTION_DEFINITIONS: Readonly<
   rescue_one: {
     id: "rescue_one",
     label: "RETTUNG",
-    icon: "🚁",
+    icon: "★",
     category: "support",
     priority: "normal",
     defaultCooldownSeconds: 2,
@@ -144,7 +144,7 @@ export const ACTION_DEFINITIONS: Readonly<
   area_rescue: {
     id: "area_rescue",
     label: "GROSSE RETTUNG",
-    icon: "🚁",
+    icon: "★",
     category: "support",
     priority: "critical",
     defaultCooldownSeconds: 10,
@@ -159,7 +159,7 @@ export const ACTION_DEFINITIONS: Readonly<
   wind: {
     id: "wind",
     label: "STURM",
-    icon: "🌀",
+    icon: "≈",
     category: "sabotage",
     priority: "normal",
     defaultCooldownSeconds: 10,
@@ -173,7 +173,7 @@ export const ACTION_DEFINITIONS: Readonly<
   low_gravity: {
     id: "low_gravity",
     label: "SCHWERELOS",
-    icon: "🌙",
+    icon: "○",
     category: "sabotage",
     priority: "normal",
     defaultCooldownSeconds: 10,
@@ -187,7 +187,7 @@ export const ACTION_DEFINITIONS: Readonly<
   collapse: {
     id: "collapse",
     label: "EINSTURZ",
-    icon: "💥",
+    icon: "▼",
     category: "sabotage",
     priority: "normal",
     defaultCooldownSeconds: 12,
@@ -196,7 +196,7 @@ export const ACTION_DEFINITIONS: Readonly<
   earthquake: {
     id: "earthquake",
     label: "ERDBEBEN",
-    icon: "〰",
+    icon: "~",
     category: "sabotage",
     priority: "critical",
     defaultCooldownSeconds: 20,
@@ -210,7 +210,7 @@ export const ACTION_DEFINITIONS: Readonly<
     id: "tsar_bomb",
     // Viewer facing name is always exactly this string.
     label: "ZAR-BOMBE",
-    icon: "☢",
+    icon: "●",
     category: "catastrophe",
     priority: "critical",
     defaultCooldownSeconds: 60,
