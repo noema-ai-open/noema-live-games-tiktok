@@ -171,6 +171,15 @@ describe("rules engine", () => {
     });
   });
 
+  it("publishes the acknowledgement synchronously, without any polling", () => {
+    const { engine, received } = createEngine();
+    expect(received).toHaveLength(0);
+    engine.handle(giftEvent({ giftName: "Rose" }), 1000);
+    // Same task as the incoming event: no timer, no interval, no await.
+    expect(received).toHaveLength(1);
+    expect(received[0]?.createdAt).toBeGreaterThan(0);
+  });
+
   it("fires one command for a whole rose streak", () => {
     const { engine, inbox } = createEngine();
     for (let index = 1; index <= 15; index += 1) {

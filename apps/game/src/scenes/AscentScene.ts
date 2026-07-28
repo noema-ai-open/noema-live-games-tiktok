@@ -32,6 +32,7 @@ export class AscentScene extends Phaser.Scene {
   private lastShieldActive = false;
   private lastIntactCount = 0;
   private workerStates = new Map<number, Worker["state"]>();
+  private workerCheckpoints = new Map<number, number>();
 
   constructor(
     private readonly simulation: Simulation,
@@ -114,6 +115,16 @@ export class AscentScene extends Phaser.Scene {
   }
 
   private trackWorkerTransitions(worker: Worker): void {
+    const lastCheckpoint = this.workerCheckpoints.get(worker.id) ?? 0;
+    if (worker.lastCheckpoint > lastCheckpoint) {
+      this.workerCheckpoints.set(worker.id, worker.lastCheckpoint);
+      this.effects.burstRepair(worker.x, worker.y - 8, 6);
+      this.audio.play("checkpoint");
+    } else if (worker.lastCheckpoint < lastCheckpoint) {
+      // Round reset or a fall back to an earlier checkpoint.
+      this.workerCheckpoints.set(worker.id, worker.lastCheckpoint);
+    }
+
     const previous = this.workerStates.get(worker.id);
     if (previous === worker.state) return;
     this.workerStates.set(worker.id, worker.state);
