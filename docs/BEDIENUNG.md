@@ -66,13 +66,22 @@ nie gesehen hat.
 | 1–9 | Rose, GG, Bussi, Fingerherz, Eiswaffel | Aufbau — geht dorthin, wo die meisten warten |
 | 10–49 | Rosa, S Blumen, Parfüm, Donut, Capybara | Schaltet eine Lücke frei |
 | 50–99 | Schmetterling, Papierkranich, Singender Pilz | Lift-Overdrive |
-| 100–299 | Handherz, Konfetti, Herzen, Blast-Trommel | Team-Schild |
-| 300–999 | Guten Abend, Göttliche Flamme | Erdbeben (Sabotage) |
-| ab 1.000 | Zeus | **ZAR-BOMBE** |
+| 100–299 | Handherz, Konfetti, Herzen, Tanzende Hände | Team-Schild |
+| 300–999 | DJ-Set, Pop-Papagei, Manifestieren, Göttliche Flamme | Große Rettung |
+| ab 1.000 | **Galaxie**, Zeus | **ZAR-BOMBE** |
 
 Die Grenzen liegen bewusst niedrig: Der Großteil der TikTok-Geschenke kostet
 1 bis 99 Coins, oberhalb von 400 wird es sehr dünn. Stufen erst ab 500 hätten
 im Stream fast nie ausgelöst.
+
+**Alle Stufen helfen.** Wer 400 Coins ausgibt, will das Team unterstützen und
+soll nicht mit einem Erdbeben bestraft werden. Die einzige Ausnahme ist die
+ZAR-BOMBE ganz oben — und die ist als Spektakel gedacht, nicht als Strafe: Das
+Team baut danach doppelt so schnell wieder auf.
+
+Willst du echte Sabotage im Spiel, weist du **Erdbeben**, **Sturm** oder
+**Einsturz** einer Stufe oder einem einzelnen Geschenk zu. Voreingestellt ist
+das bewusst nicht.
 
 Diese Stufen kannst du im Operator-Fenster unter *Münzstufen* jederzeit ändern:
 andere Wirkung, andere Stärke, andere Abklingzeit, oder ganz abschalten.

@@ -90,8 +90,12 @@ export function createDefaultTiers(): GiftTierRule[] {
     tier("tier-2", "10–49 · Donut, S Blumen", 10, 49, "bridge", 1),
     tier("tier-3", "50–99 · Papierkranich, Pilz", 50, 99, "lift", 18),
     tier("tier-4", "100–299 · Handherz, Herzen", 100, 299, "team_shield", 15),
-    tier("tier-5", "300–999 · Göttliche Flamme", 300, 999, "earthquake", 7),
-    tier("tier-6", "ab 1.000 · Zeus", 1000, Infinity, "tsar_bomb", 1),
+    // Wer 400 Coins schickt, will helfen. Eine Sabotagestufe an dieser Stelle
+    // wuerde grosszuegige Zuschauer bestrafen — deshalb ist auch das obere
+    // Band hilfreich. Erdbeben und Sturm bleiben zuweisbar, nur nicht als
+    // Voreinstellung.
+    tier("tier-5", "300–999 · DJ-Set, Göttliche Flamme", 300, 999, "area_rescue", 16),
+    tier("tier-6", "ab 1.000 · Galaxie, Zeus", 1000, Infinity, "tsar_bomb", 1),
   ];
 }
 

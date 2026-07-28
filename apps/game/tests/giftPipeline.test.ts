@@ -323,7 +323,9 @@ describe("gift catalog", () => {
       [30, "bridge"],
       [88, "lift"],
       [199, "team_shield"],
-      [999, "earthquake"],
+      [400, "area_rescue"],
+      [999, "area_rescue"],
+      [1000, "tsar_bomb"],
       [34000, "tsar_bomb"],
     ] as const) {
       const result = resolveGift(catalog, {
