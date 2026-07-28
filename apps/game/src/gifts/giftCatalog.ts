@@ -3,7 +3,7 @@ import { giftIdFromName } from "../connectors/bridgeNormalizer";
 import { getAction, type GameActionId } from "./actions";
 
 export const GIFT_CATALOG_STORAGE_KEY = "noema-ascent.gift-catalog";
-export const GIFT_CATALOG_VERSION = 2;
+export const GIFT_CATALOG_VERSION = 3;
 
 export type GiftMappingEntry = {
   /** Preferred key. Gift names are only used as a fallback. */
@@ -19,6 +19,26 @@ export type GiftMappingEntry = {
   enabled: boolean;
 };
 
+/**
+ * Zuordnung nach Muenzwert.
+ *
+ * Geschenknamen aendern sich je nach Region und Zeitpunkt, und niemand kennt
+ * den vollstaendigen TikTok-Katalog. Der Muenzwert kommt aber bei jedem
+ * Geschenk mit. Deshalb entscheidet er, was passiert — auch bei Geschenken,
+ * die diese App noch nie gesehen hat.
+ */
+export type GiftTierRule = {
+  id: string;
+  label: string;
+  minCoins: number;
+  /** Obergrenze einschliesslich. `Infinity` fuer die hoechste Stufe. */
+  maxCoins: number;
+  action: GameActionId;
+  strength: number;
+  cooldownSeconds: number;
+  enabled: boolean;
+};
+
 export type FreeActionConfig = {
   like: { action: GameActionId; strength: number };
   follow: { action: GameActionId; strength: number };
@@ -27,9 +47,50 @@ export type FreeActionConfig = {
 
 export type GiftCatalogConfig = {
   version: number;
+  /** Stufen nach Muenzwert — greifen fuer jedes Geschenk. */
+  tiers: GiftTierRule[];
+  /** Ausnahmen fuer einzelne Geschenke, haben Vorrang vor den Stufen. */
   entries: GiftMappingEntry[];
   free: FreeActionConfig;
 };
+
+function tier(
+  id: string,
+  label: string,
+  minCoins: number,
+  maxCoins: number,
+  action: GameActionId,
+  strength: number,
+): GiftTierRule {
+  return {
+    id,
+    label,
+    minCoins,
+    maxCoins,
+    action,
+    strength,
+    cooldownSeconds: getAction(action).defaultCooldownSeconds,
+    enabled: true,
+  };
+}
+
+/**
+ * Hilfe ist billig, Zerstoerung teuer — die Leiter aus dem Wirtschaftskonzept.
+ *
+ * Die Beispiele in den Beschriftungen stammen aus echten Geschenklisten der
+ * deutschen TikTok-Oberflaeche. Sie dienen nur der Wiedererkennung; entscheidend
+ * ist immer der Muenzwert, den die Bridge mitliefert.
+ */
+export function createDefaultTiers(): GiftTierRule[] {
+  return [
+    tier("tier-1", "1–9 · Rose, GG, Bussi", 1, 9, "repair", 20),
+    tier("tier-2", "10–99 · Donut, Capybara", 10, 99, "bridge", 1),
+    tier("tier-3", "100–499 · Handherz, Konfetti", 100, 499, "lift", 18),
+    tier("tier-4", "500–1.999 · Göttliche Flamme", 500, 1999, "team_shield", 15),
+    tier("tier-5", "2.000–9.999 Coins", 2000, 9999, "earthquake", 7),
+    tier("tier-6", "ab 10.000 · Zeus", 10000, Infinity, "tsar_bomb", 1),
+  ];
+}
 
 function entry(
   giftId: string,
@@ -59,20 +120,11 @@ function entry(
 export function createDefaultCatalog(): GiftCatalogConfig {
   return {
     version: GIFT_CATALOG_VERSION,
+    tiers: createDefaultTiers(),
+    // Nur echte, weit verbreitete TikTok-Geschenke als Ausnahme. Alles andere
+    // laeuft ueber die Muenzstufen, damit auch unbekannte Geschenke wirken.
     entries: [
-      entry(giftIdFromName("Rose"), "Rose", 1, "repair", 24, ["rosa", "rose"]),
-      entry(giftIdFromName("Finger Heart"), "Finger Heart", 5, "team_energy", 6),
-      entry(giftIdFromName("Bridge Crate"), "Bridge Crate", 30, "bridge", 1, [
-        "mock_bridge_crate",
-      ]),
-      entry(giftIdFromName("Jump Pad"), "Jump Pad", 45, "jump_field", 15),
-      entry(giftIdFromName("Lift Core"), "Lift Core", 199, "lift", 18),
-      entry(giftIdFromName("Rescue Drone"), "Rescue Drone", 299, "rescue_one", 1),
-      entry(giftIdFromName("Team Aegis"), "Team Aegis", 999, "team_shield", 15),
-      entry(giftIdFromName("Crosswind"), "Crosswind", 500, "wind", 8),
-      entry(giftIdFromName("Fault Line"), "Fault Line", 3000, "earthquake", 7),
-      // Deliberately a normal, editable row: Galaxy is not hard-coded truth.
-      entry(giftIdFromName("Galaxy"), "Galaxy", 1000, "tsar_bomb", 1),
+      entry(giftIdFromName("Rose"), "Rose", 1, "repair", 20, ["rosa"]),
       entry("mock_tsar_bomb", "ZAR-BOMBE Testgeschenk", 10000, "tsar_bomb", 1),
     ],
     free: {
@@ -83,12 +135,24 @@ export function createDefaultCatalog(): GiftCatalogConfig {
   };
 }
 
+export type ResolvedEffect = {
+  action: GameActionId;
+  strength: number;
+  cooldownSeconds: number;
+  /** Woher die Regel kommt — fuer die Anzeige im Operator. */
+  source: string;
+};
+
 export type CatalogResolution =
-  | { kind: "mapped"; entry: GiftMappingEntry }
-  | { kind: "disabled"; entry: GiftMappingEntry }
+  | { kind: "mapped"; effect: ResolvedEffect }
+  | { kind: "disabled"; label: string }
   | { kind: "unknown"; giftId: string; giftName: string };
 
-/** Resolves a gift by id first, then by lowercase name as documented fallback. */
+/**
+ * Reihenfolge: Ausnahme fuer genau dieses Geschenk, sonst der Name als
+ * Rueckfallebene, sonst die Muenzstufe. Erst wenn auch der Muenzwert fehlt,
+ * gilt ein Geschenk als unbekannt.
+ */
 export function resolveGift(
   catalog: GiftCatalogConfig,
   gift: NormalizedGiftPayload,
@@ -97,10 +161,39 @@ export function resolveGift(
   const name = gift.giftName.trim().toLowerCase();
   const match =
     byId ?? catalog.entries.find((item) => item.matchNames.includes(name));
-  if (!match) return { kind: "unknown", giftId: gift.giftId, giftName: gift.giftName };
-  return match.enabled
-    ? { kind: "mapped", entry: match }
-    : { kind: "disabled", entry: match };
+  if (match) {
+    if (!match.enabled) return { kind: "disabled", label: match.displayName };
+    return {
+      kind: "mapped",
+      effect: {
+        action: match.action,
+        strength: match.strength,
+        cooldownSeconds: match.cooldownSeconds,
+        source: match.displayName,
+      },
+    };
+  }
+
+  const coins = gift.coinValue;
+  if (coins > 0) {
+    const rule = (catalog.tiers ?? []).find(
+      (item) => coins >= item.minCoins && coins <= item.maxCoins,
+    );
+    if (rule) {
+      if (!rule.enabled) return { kind: "disabled", label: rule.label };
+      return {
+        kind: "mapped",
+        effect: {
+          action: rule.action,
+          strength: rule.strength,
+          cooldownSeconds: rule.cooldownSeconds,
+          source: rule.label,
+        },
+      };
+    }
+  }
+
+  return { kind: "unknown", giftId: gift.giftId, giftName: gift.giftName };
 }
 
 /**
@@ -123,6 +216,18 @@ export function migrateCatalog(raw: unknown): GiftCatalogConfig {
       merged.push(fallback);
     }
   }
+  // Erfundene Platzhalter aus fruehen Fassungen entfernen: Diese Geschenke
+  // gibt es auf TikTok nicht, sie haben live nie ausgeloest.
+  const invented = new Set([
+    giftIdFromName("Bridge Crate"),
+    giftIdFromName("Jump Pad"),
+    giftIdFromName("Lift Core"),
+    giftIdFromName("Rescue Drone"),
+    giftIdFromName("Team Aegis"),
+    giftIdFromName("Crosswind"),
+    giftIdFromName("Fault Line"),
+  ]);
+  const cleaned = merged.filter((item) => !invented.has(item.giftId));
 
   const free = defaults.free;
   const rawFree = candidate.free;
@@ -142,7 +247,18 @@ export function migrateCatalog(raw: unknown): GiftCatalogConfig {
     }
   }
 
-  return { version: GIFT_CATALOG_VERSION, entries: merged, free };
+  const tiers = Array.isArray(candidate.tiers)
+    ? candidate.tiers
+        .map((item) => normalizeTier(item))
+        .filter((item): item is GiftTierRule => item !== null)
+    : [];
+
+  return {
+    version: GIFT_CATALOG_VERSION,
+    tiers: tiers.length > 0 ? tiers : defaults.tiers,
+    entries: cleaned,
+    free,
+  };
 }
 
 const ACTION_KEYS: Record<string, true> = {
@@ -161,6 +277,30 @@ const ACTION_KEYS: Record<string, true> = {
   earthquake: true,
   tsar_bomb: true,
 };
+
+function normalizeTier(raw: unknown): GiftTierRule | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const record = raw as Record<string, unknown>;
+  const action = record["action"];
+  if (typeof action !== "string" || !(action in ACTION_KEYS)) return null;
+  const number = (value: unknown, fallback: number): number =>
+    typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return {
+    id: typeof record["id"] === "string" ? record["id"] : `tier-${Date.now()}`,
+    label: typeof record["label"] === "string" ? record["label"] : "Stufe",
+    minCoins: number(record["minCoins"], 0),
+    // JSON kennt kein Infinity; nach dem Laden steht dort null.
+    maxCoins:
+      record["maxCoins"] === null ? Infinity : number(record["maxCoins"], Infinity),
+    action: action as GameActionId,
+    strength: number(record["strength"], 1),
+    cooldownSeconds: number(
+      record["cooldownSeconds"],
+      getAction(action as GameActionId).defaultCooldownSeconds,
+    ),
+    enabled: record["enabled"] !== false,
+  };
+}
 
 function normalizeEntry(raw: unknown): GiftMappingEntry | null {
   if (typeof raw !== "object" || raw === null) return null;

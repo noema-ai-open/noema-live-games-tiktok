@@ -54,28 +54,32 @@ seinem Namen, dem Geschenk und der ausgelösten Wirkung. Das ist die Belohnung
 für den Absender — er sieht schwarz auf weiß, dass sein Geschenk angekommen
 ist.
 
-## Wer was auslöst (Standardeinstellung)
+## Wer was auslöst
 
-| Geschenk | Wirkung |
-| --- | --- |
-| Rose | Aufbau — geht immer dorthin, wo die meisten warten |
-| Finger Heart | Team-Energie |
-| Bridge Crate | Schaltet eine Lücke komplett frei |
-| Jump Pad | Sprungfeld — schleudert die Roboter über eine Lücke, nur zeitlich begrenzt |
-| Lift Core | Lift-Overdrive, der Aufzug fährt doppelt so schnell |
-| Rescue Drone | Rettet einen fallenden Roboter |
-| Team Aegis | Team-Schild, alle Roboter sind kurz unverwundbar |
-| Crosswind | Sturm — Sabotage |
-| Fault Line | Erdbeben — reißt einen gebauten Übergang ein und stößt Roboter vom Deck |
-| Galaxy | **ZAR-BOMBE** |
+Entscheidend ist der **Münzwert**, nicht der Name. TikTok hat hunderte
+Geschenke, die sich je nach Region und Zeitpunkt ändern — aber jedes Geschenk
+bringt seinen Münzwert mit. Deshalb wirkt auch ein Geschenk, das diese App noch
+nie gesehen hat.
+
+| Münzwert | Beispiele aus der TikTok-Liste | Wirkung |
+| --- | --- | --- |
+| 1–9 | Rose, GG, Bussi, Fingerherz | Aufbau — geht dorthin, wo die meisten warten |
+| 10–99 | Donut, Capybara, Papierkranich | Schaltet eine Lücke frei |
+| 100–499 | Handherz, Konfetti, Herzen | Lift-Overdrive |
+| 500–1.999 | Göttliche Flamme | Team-Schild |
+| 2.000–9.999 | — | Erdbeben (Sabotage) |
+| ab 10.000 | Zeus | **ZAR-BOMBE** |
+
+Diese Stufen kannst du im Operator-Fenster unter *Münzstufen* jederzeit ändern:
+andere Wirkung, andere Stärke, andere Abklingzeit, oder ganz abschalten.
+
+Willst du für ein **einzelnes** Geschenk etwas anderes, trägst du es unter
+*Ausnahmen* ein. Ausnahmen gehen den Stufen vor.
 
 **Kostenlos und trotzdem wichtig:** Likes, Follows und Shares laden die
 Team-Energie auf. Ist der Balken voll, **schaltet er von selbst einen Übergang
 frei** und beginnt wieder bei null. Ohne einen einzigen Cent kann die Runde
 gewonnen werden — nur langsamer. Das ist Absicht.
-
-Grundregel der Balance: Helfen ist billig, Zerstören ist teuer. Sabotage
-kostet ein Vielfaches der vergleichbaren Hilfe.
 
 ## Die ZAR-BOMBE
 
@@ -140,7 +144,9 @@ Läuft die Bridge? Sie muss auf demselben Rechner laufen. Steht im Operator
 *Live verbunden* oder *Reconnect*?
 
 **Ein Geschenk bewirkt nichts**
-Wahrscheinlich unbekannt. Schau unter *Unbekannte Geschenke* nach.
+Das passiert nur, wenn TikTok keinen Münzwert mitgeschickt hat. Solche Fälle
+stehen im Operator unter *Unbekannte Geschenke* und lassen sich dort mit einem
+Klick zuordnen.
 
 **Das schwarze Fenster ist zu**
 Dann läuft der Server nicht mehr und das Stream-Bild bleibt stehen.

@@ -4,11 +4,7 @@ import type {
 } from "@noema/event-protocol";
 import { getAction, type ActionDefinition, type GameActionId } from "./actions";
 import { FeedbackBus, type FeedbackTier, type GiftFeedback } from "./FeedbackBus";
-import {
-  resolveGift,
-  type GiftCatalogConfig,
-  type GiftMappingEntry,
-} from "./giftCatalog";
+import { resolveGift, type GiftCatalogConfig } from "./giftCatalog";
 import { GiftStreakTracker, comboKeyFor } from "./GiftStreakTracker";
 import { PriorityInbox } from "./PriorityInbox";
 
@@ -141,6 +137,7 @@ export class RulesEngine {
       return;
     }
     if (resolution.kind === "disabled") {
+      void resolution.label;
       this.publishFeedback(event, observation.total, {
         icon: "×",
         effectLabel: "DEAKTIVIERT",
@@ -150,12 +147,12 @@ export class RulesEngine {
       return;
     }
 
-    const definition = getAction(resolution.entry.action);
+    const definition = getAction(resolution.effect.action);
     // Immediate acknowledgement — this happens on the same task as the event.
     this.publishFeedback(event, observation.total, {
       icon: definition.icon,
       effectLabel: definition.label,
-      tier: tierFor(definition, resolution.entry, observation.total),
+      tier: tierFor(definition, gift.coinValue, observation.total),
       applied: observation.kind === "final",
     });
 
@@ -176,9 +173,9 @@ export class RulesEngine {
     const resolution = resolveGift(this.catalog, gift);
     if (resolution.kind !== "mapped") return;
 
-    const entry = resolution.entry;
-    const definition = getAction(entry.action);
-    if (this.isOnCooldown(entry.action, now)) {
+    const effect = resolution.effect;
+    const definition = getAction(effect.action);
+    if (this.isOnCooldown(effect.action, now)) {
       if (republishFeedback) {
         this.publishFeedback(event, total, {
           icon: "…",
@@ -190,18 +187,18 @@ export class RulesEngine {
       return;
     }
 
-    const strength = scaleStrength(definition.id, entry.strength, total);
+    const strength = scaleStrength(definition.id, effect.strength, total);
     const command = definition.build(strength, event.actor);
     if (!command) return;
 
-    this.startCooldown(entry.action, entry.cooldownSeconds, now);
+    this.startCooldown(effect.action, effect.cooldownSeconds, now);
     this.inbox.push(command, priorityFor(definition));
 
     if (republishFeedback) {
       this.publishFeedback(event, total, {
         icon: definition.icon,
         effectLabel: definition.label,
-        tier: tierFor(definition, entry, total),
+        tier: tierFor(definition, gift.coinValue, total),
         applied: true,
       });
     }
@@ -279,11 +276,11 @@ function priorityFor(definition: ActionDefinition): CommandPriority {
 
 function tierFor(
   definition: ActionDefinition,
-  entry: GiftMappingEntry,
+  coinValue: number,
   total: number,
 ): FeedbackTier {
   if (definition.category === "catastrophe") return "large";
-  const coins = entry.coinValue * Math.max(1, total);
+  const coins = coinValue * Math.max(1, total);
   if (coins >= 500 || definition.priority === "critical") return "medium";
   return "small";
 }

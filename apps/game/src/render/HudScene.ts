@@ -264,9 +264,9 @@ export class HudScene extends Phaser.Scene {
       .text(396, 1076, this.buildLegend(), {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
-        fontSize: "15px",
+        fontSize: "13px",
         color: PALETTE.text,
-        lineSpacing: 5,
+        lineSpacing: 4,
       })
       .setDepth(2);
 
@@ -290,18 +290,18 @@ export class HudScene extends Phaser.Scene {
       .setDepth(2);
   }
 
-  /** Legend is generated from the active mapping, never hard-coded. */
+  /**
+   * Die Legende entsteht aus den aktiven Muenzstufen, nie aus festen Namen.
+   * So stimmt sie auch bei Geschenken, die diese App nicht kennt.
+   */
   private buildLegend(): string {
-    const wanted = ["repair", "bridge", "lift", "team_shield", "tsar_bomb"];
     const lines: string[] = [];
-    for (const action of wanted) {
-      const entry = this.catalog.entries.find(
-        (item) => item.action === action && item.enabled,
-      );
-      if (!entry) continue;
-      const definition = getAction(entry.action);
-      lines.push(`${definition.icon} ${entry.displayName} → ${definition.label}`);
-      if (lines.length >= 5) break;
+    for (const rule of this.catalog.tiers ?? []) {
+      if (!rule.enabled) continue;
+      const definition = getAction(rule.action);
+      if (definition.id === "none") continue;
+      lines.push(`${definition.icon} ${rule.label} → ${definition.label}`);
+      if (lines.length >= 6) break;
     }
     return lines.join("\n");
   }

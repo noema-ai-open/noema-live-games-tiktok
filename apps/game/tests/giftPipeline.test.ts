@@ -203,8 +203,8 @@ describe("rules engine", () => {
     for (let index = 1; index <= 4; index += 1) {
       engine.handle(
         giftEvent(
-          { giftName: "Galaxy", repeatCount: index, coinValue: 1000 },
-          { eventId: `galaxy-${index}`, receivedAt: 1000 + index * 20 },
+          { giftName: "Zeus", repeatCount: index, coinValue: 34000 },
+          { eventId: `zeus-${index}`, receivedAt: 1000 + index * 20 },
         ),
         1000 + index * 20,
       );
@@ -220,14 +220,14 @@ describe("rules engine", () => {
     const { engine, inbox } = createEngine();
     engine.handle(
       giftEvent(
-        { giftName: "Galaxy", comboFinal: true, coinValue: 1000 },
+        { giftName: "Zeus", comboFinal: true, coinValue: 34000 },
         { eventId: "g1" },
       ),
       1000,
     );
     engine.handle(
       giftEvent(
-        { giftName: "Galaxy", comboFinal: true, coinValue: 1000 },
+        { giftName: "Zeus", comboFinal: true, coinValue: 34000 },
         { eventId: "g2", actorId: "tt:9", receivedAt: 5000 },
       ),
       5000,
@@ -249,8 +249,9 @@ describe("rules engine", () => {
 
   it("logs unknown gifts without triggering a random effect", () => {
     const { engine, inbox, received } = createEngine();
+    // Ohne Muenzwert kann keine Stufe greifen — nur dann gilt es als unbekannt.
     engine.handle(
-      giftEvent({ giftName: "Brandneues Geschenk" }, { eventId: "x" }),
+      giftEvent({ giftName: "Brandneues Geschenk", coinValue: 0 }, { eventId: "x" }),
       1000,
     );
     engine.tick(5000);
@@ -300,15 +301,55 @@ describe("gift catalog", () => {
       repeatCount: 1,
     });
     expect(byName.kind).toBe("mapped");
-    expect(byName.kind === "mapped" && byName.entry.action).toBe("repair");
+    expect(byName.kind === "mapped" && byName.effect.action).toBe("repair");
 
+    // Ohne Muenzwert bleibt ein Geschenk unbekannt.
     const unknown = resolveGift(catalog, {
       giftId: "nope",
       giftName: "Nope",
-      coinValue: 1,
+      coinValue: 0,
       repeatCount: 1,
     });
     expect(unknown.kind).toBe("unknown");
+  });
+
+  it("ordnet ein voellig unbekanntes Geschenk ueber seinen Muenzwert zu", () => {
+    const catalog = createDefaultCatalog();
+    for (const [coins, action] of [
+      [5, "repair"],
+      [50, "bridge"],
+      [250, "lift"],
+      [999, "team_shield"],
+      [5000, "earthquake"],
+      [25000, "tsar_bomb"],
+    ] as const) {
+      const result = resolveGift(catalog, {
+        giftId: `nie-gesehen-${coins}`,
+        giftName: "Voellig neues Geschenk",
+        coinValue: coins,
+        repeatCount: 1,
+      });
+      expect(result.kind, `${coins} Coins`).toBe("mapped");
+      expect(result.kind === "mapped" && result.effect.action).toBe(action);
+    }
+  });
+
+  it("wirft die erfundenen Platzhalter beim Laden raus", () => {
+    const migrated = migrateCatalog({
+      version: 2,
+      entries: [
+        {
+          giftId: "name:team-aegis",
+          displayName: "Team Aegis",
+          action: "team_shield",
+          strength: 15,
+        },
+      ],
+    });
+    expect(
+      migrated.entries.some((item) => item.giftId === "name:team-aegis"),
+    ).toBe(false);
+    expect(migrated.tiers.length).toBeGreaterThan(0);
   });
 
   it("reports disabled entries instead of mapping them", () => {
@@ -336,7 +377,7 @@ describe("gift catalog", () => {
         { giftId: "broken" },
       ],
     });
-    expect(migrated.version).toBe(2);
+    expect(migrated.version).toBe(3);
     expect(migrated.entries.some((item) => item.giftId === "custom-1")).toBe(true);
     expect(migrated.entries.some((item) => item.giftId === "broken")).toBe(false);
     expect(migrated.free.like.action).toBe("team_energy");
