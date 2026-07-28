@@ -23,11 +23,11 @@ out. The premium spectacle is the `ZAR-BOMBE`.
 
 ### Windows (installer)
 
-Download `NOEMA-Ascent-Setup.exe` from the latest build and install it. The
+Download `NOEMA-AI-Ascent-Setup.exe` from the latest build and install it. The
 package contains the built game and a small local web server based on Windows'
 own `System.Net.HttpListener` — no Node.js, no Python, no runtime download.
 
-Start "NOEMA Ascent" from the start menu: a console window opens with the
+Start "NOEMA-AI Ascent" from the start menu: a console window opens with the
 operator and stream URLs, and the browser opens the operator view. Keep the
 console window open while playing.
 

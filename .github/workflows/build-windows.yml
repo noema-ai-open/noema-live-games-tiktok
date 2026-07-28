@@ -50,7 +50,7 @@ jobs:
             throw "Keine Versionsnummer in apps/game/package.json gefunden."
           }
           "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Baue NOEMA Ascent v$version"
+          Write-Host "Baue NOEMA-AI Ascent v$version"
 
       - name: Spiel bauen
         run: pnpm install --frozen-lockfile && pnpm build
@@ -120,9 +120,9 @@ jobs:
       - name: Versionierten Installer und Pruefsumme erzeugen
         shell: pwsh
         run: |
-          $source = "packaging/Output/NOEMA-Ascent-Setup.exe"
+          $source = "packaging/Output/NOEMA-AI-Ascent-Setup.exe"
           if (-not (Test-Path $source)) { throw "Installer wurde nicht erzeugt." }
-          $target = "packaging/Output/NOEMA-Ascent-Setup-v$env:APP_VERSION.exe"
+          $target = "packaging/Output/NOEMA-AI-Ascent-Setup-v$env:APP_VERSION.exe"
           Copy-Item $source $target -Force
           $hash = (Get-FileHash $target -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $(Split-Path $target -Leaf)" | Set-Content "packaging/Output/SHA256SUMS.txt" -Encoding ascii
@@ -132,8 +132,8 @@ jobs:
       - name: Installer als Artefakt hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: NOEMA-Ascent-Setup-v${{ env.APP_VERSION }}
+          name: NOEMA-AI-Ascent-Setup-v${{ env.APP_VERSION }}
           path: |
-            packaging/Output/NOEMA-Ascent-Setup-v*.exe
+            packaging/Output/NOEMA-AI-Ascent-Setup-v*.exe
             packaging/Output/SHA256SUMS.txt
           if-no-files-found: error

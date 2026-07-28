@@ -1,10 +1,10 @@
-NOEMA Ascent — Interactive LIVE Rescue Game
-===========================================
+NOEMA-AI Ascent — Interactive LIVE Rescue Game
+==============================================
 
 Starten
 -------
 
-Verknuepfung "NOEMA Ascent" im Startmenue oder auf dem Desktop anklicken.
+Verknuepfung "NOEMA-AI Ascent" im Startmenue oder auf dem Desktop anklicken.
 
 Es oeffnet sich ein kleines schwarzes Fenster (der lokale Webserver) und
 zusaetzlich der Browser mit der Steuerung. Das schwarze Fenster muss offen
@@ -22,7 +22,7 @@ Port. Dann stehen dort andere Nummern.
 TikTok LIVE Studio
 ------------------
 
-1. NOEMA Ascent starten (siehe oben).
+1. NOEMA-AI Ascent starten (siehe oben).
 2. In LIVE Studio: Quelle hinzufuegen -> Link
 3. Die Stream-Adresse aus dem schwarzen Fenster einfuegen.
 4. Quellgroesse auf 720 x 1280 stellen.
@@ -45,14 +45,14 @@ Mit TikTok verbinden
 --------------------
 
 Dafuer wird die NOEMA TikTok Live Bridge gebraucht. Sie muss auf demselben
-Rechner laufen wie NOEMA Ascent.
+Rechner laufen wie NOEMA-AI Ascent.
 
 1. Bridge starten und dort den oeffentlichen TikTok-Namen eintragen.
-2. In NOEMA Ascent: "Live Bridge verbinden".
+2. In NOEMA-AI Ascent: "Live Bridge verbinden".
 3. Adresse steht standardmaessig auf http://127.0.0.1:8765 — passt normal.
 4. "Verbinden & Runde starten".
 
-NOEMA Ascent fragt niemals nach einem TikTok-Passwort, einem Cookie oder
+NOEMA-AI Ascent fragt niemals nach einem TikTok-Passwort, einem Cookie oder
 einem Zugangstoken. Es gibt kein Benutzerkonto und keine Anmeldung.
 
 
