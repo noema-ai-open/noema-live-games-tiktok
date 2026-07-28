@@ -9,6 +9,9 @@ third-party images, icons, fonts or sounds.
 - Logical resolution 980 × 1280: a 720-wide tower plus a 260-wide left
   column. The column carries the gift legend and the sender feedback, which
   used to sit on top of the play area and was unreadable on a phone.
+- The column is drawn in the same visual language as the tower — cold gradient,
+  horizontal braces, rivets and a light edge facing the play area. Flat black
+  would have read as a hole next to the picture.
 - Two scenes: `AscentScene` (world) and `HudScene` (overlay). The HUD has its
   own camera, so camera shake never moves the readouts.
 - The whole level fits on screen, so there is no scrolling camera to fight with

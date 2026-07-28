@@ -15,7 +15,7 @@ import { getAction } from "../gifts/actions";
 import type { GiftCatalogConfig } from "../gifts/giftCatalog";
 import type { Simulation } from "../simulation/Simulation";
 import { PALETTE, toCss } from "./palette";
-import { ensureTextures } from "./textures";
+import { TEXTURE_KEYS, ensureTextures } from "./textures";
 
 type Toast = {
   key: string;
@@ -255,11 +255,16 @@ export class HudScene extends Phaser.Scene {
    * stoert sie nichts und ist auf einem Handy lesbar.
    */
   private buildBottomBar(): void {
+    this.buildSidebarBackdrop();
+
     const plate = this.add.graphics().setDepth(1);
-    plate.fillStyle(0x03080f, 0.9);
-    plate.fillRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 16);
-    plate.lineStyle(2, PALETTE.towerEdge, 0.45);
-    plate.strokeRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 16);
+    // Panel im Stil der Turmdecks: dunkler Kern, heller Rand, Lichtkante oben.
+    plate.fillGradientStyle(0x0d2233, 0x0d2233, 0x061520, 0x061520, 0.96);
+    plate.fillRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 14);
+    plate.lineStyle(2, PALETTE.towerEdge, 0.8);
+    plate.strokeRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 14);
+    plate.fillStyle(PALETTE.warn, 0.9);
+    plate.fillRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 4, 2);
 
     this.add
       .text(30, 30, "DEIN GESCHENK", {
@@ -306,6 +311,64 @@ export class HudScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(2);
+  }
+
+  /**
+   * Die Seitenspalte bekommt denselben Look wie der Turm: kalter Farbverlauf,
+   * Streben, Nietenraster und eine Lichtkante zum Spielfeld hin. Flaches
+   * Schwarz haette wie ein Loch neben dem Bild gewirkt.
+   */
+  private buildSidebarBackdrop(): void {
+    const g = this.add.graphics().setDepth(0);
+
+    g.fillGradientStyle(
+      PALETTE.towerMid,
+      PALETTE.towerMid,
+      PALETTE.skyBottom,
+      PALETTE.skyBottom,
+      1,
+    );
+    g.fillRect(0, 0, SIDEBAR_WIDTH, LOGICAL_HEIGHT);
+
+    // Innenfläche etwas dunkler, damit ein Rahmen entsteht.
+    g.fillStyle(PALETTE.towerFar, 0.85);
+    g.fillRect(6, 6, SIDEBAR_WIDTH - 12, LOGICAL_HEIGHT - 12);
+
+    // Waagerechte Streben wie im Turmschacht.
+    g.lineStyle(2, PALETTE.towerNear, 0.4);
+    for (let y = 40; y < LOGICAL_HEIGHT; y += 62) {
+      g.lineBetween(8, y, SIDEBAR_WIDTH - 8, y);
+    }
+    g.lineStyle(1, PALETTE.towerEdge, 0.16);
+    for (let x = 30; x < SIDEBAR_WIDTH - 10; x += 42) {
+      g.lineBetween(x, 8, x, LOGICAL_HEIGHT - 8);
+    }
+
+    // Diagonale Verstrebungen, sparsam.
+    g.lineStyle(3, PALETTE.towerNear, 0.28);
+    for (let y = 620; y < LOGICAL_HEIGHT - 120; y += 150) {
+      g.lineBetween(16, y, SIDEBAR_WIDTH - 16, y + 130);
+    }
+
+    // Nieten am Rand.
+    g.fillStyle(PALETTE.towerEdge, 0.5);
+    for (let y = 26; y < LOGICAL_HEIGHT; y += 62) {
+      g.fillCircle(14, y, 2.5);
+      g.fillCircle(SIDEBAR_WIDTH - 14, y, 2.5);
+    }
+
+    // Lichtkante zum Spielfeld hin — der optische Übergang zum Turm.
+    const edge = this.add
+      .rectangle(SIDEBAR_WIDTH - 2, LOGICAL_HEIGHT / 2, 3, LOGICAL_HEIGHT, PALETTE.energy, 0.85)
+      .setDepth(1);
+    edge.setBlendMode(Phaser.BlendModes.ADD);
+    const halo = this.add
+      .image(SIDEBAR_WIDTH, LOGICAL_HEIGHT / 2, TEXTURE_KEYS.glow)
+      .setDisplaySize(120, LOGICAL_HEIGHT)
+      .setTint(PALETTE.energy)
+      .setAlpha(0.12)
+      .setDepth(0);
+    halo.setBlendMode(Phaser.BlendModes.ADD);
   }
 
   /**
