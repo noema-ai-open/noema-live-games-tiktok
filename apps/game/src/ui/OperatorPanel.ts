@@ -143,7 +143,9 @@ export class OperatorPanel {
           <label><input data-toggle="safe" type="checkbox" /> Safe Mode</label>
           <label><input data-toggle="motion" type="checkbox" /> Reduced Motion</label>
           <label><input data-toggle="mute" type="checkbox" /> Stumm</label>
+          <label><input data-toggle="auto" type="checkbox" ${this.deps.settings.autoRestart ? "checked" : ""} /> Automodus</label>
         </div>
+        <p class="hint" data-status="auto-hint">Neue Runde startet automatisch.</p>
         <label class="slider-field">Lautstärke
           <input data-input="volume" type="range" min="0" max="100" value="${Math.round(this.deps.settings.masterVolume * 100)}" />
         </label>
@@ -264,6 +266,8 @@ export class OperatorPanel {
       } else if (toggle === "motion") {
         this.submit({ type: "set_reduced_motion", enabled: input.checked });
         this.updateSettings({ reducedMotion: input.checked });
+      } else if (toggle === "auto") {
+        this.updateSettings({ autoRestart: input.checked });
       } else if (toggle === "mute") {
         this.deps.audio.setMuted(input.checked);
         this.updateSettings({ muted: input.checked });

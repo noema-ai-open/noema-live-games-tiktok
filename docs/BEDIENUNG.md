@@ -124,6 +124,10 @@ Zufall fest; gleicher Seed heißt gleicher Rundenverlauf.
 - **Reduced Motion** — deutlich weniger Blitze und Kamerawackeln. Wenn dir vom
   Bild schlecht wird oder du einen ruhigen Stream willst.
 - **Stumm** — Ton aus. Daneben der Lautstärkeregler.
+- **Automodus** — nach dem Rundenende startet nach zwölf Sekunden von selbst
+  eine neue Runde, mit neuem Zufallsverlauf. Das Ergebnis bleibt vorher kurz
+  stehen, damit die Zuschauer es lesen können. Ist der Schalter aus, wartet das
+  Spiel auf *Runde starten*.
 
 **Testereignisse** — löst Geschenke aus, ohne dass jemand etwas schicken muss.
 Zum Ausprobieren vor dem Stream. „Rose-Serie ×5 senden" testet, ob eine

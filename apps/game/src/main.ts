@@ -16,6 +16,7 @@ import { AscentScene } from "./scenes/AscentScene";
 import { Simulation } from "./simulation/Simulation";
 import { AudioSystem } from "./systems/AudioSystem";
 import { LiveSession } from "./systems/LiveSession";
+import { RoundDirector } from "./systems/RoundDirector";
 import "./styles/main.css";
 import { OperatorPanel } from "./ui/OperatorPanel";
 import { StartScreen, type StartChoice } from "./ui/StartScreen";
@@ -66,6 +67,18 @@ const game = new Phaser.Game({
 // The HUD runs in parallel on its own camera so world shake never moves it.
 game.scene.start("HudScene");
 
+const rounds = new RoundDirector(simulation, {
+  enabled: settings.autoRestart,
+  delaySeconds: settings.autoRestartDelaySeconds,
+  onRestart: () => {
+    // Ein Neustart leert die Befehlswarteschlange, deshalb muessen Safe Mode
+    // und Reduced Motion danach erneut gesetzt werden.
+    rules.reset();
+    applyAccessibility();
+  },
+});
+rounds.start();
+
 function persist(next: AppSettings): void {
   settings = next;
   saveSettings(settings);
@@ -114,7 +127,10 @@ if (viewMode === "operator") {
     rules,
     live,
     settings,
-    onSettingsChange: (next) => persist(next),
+    onSettingsChange: (next) => {
+      persist(next);
+      rounds.setEnabled(next.autoRestart);
+    },
     onCatalogChange: (catalog) => {
       rules.setCatalog(catalog);
       hudScene.setCatalog(catalog);
@@ -160,6 +176,7 @@ window.addEventListener("keydown", unlockAudio, { once: true });
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
+    rounds.stop();
     live.stop();
     connectors.stop();
     operatorPanel?.destroy();

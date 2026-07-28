@@ -12,6 +12,9 @@ export type AppSettings = {
   reducedMotion: boolean;
   muted: boolean;
   masterVolume: number;
+  /** Automodus: startet nach dem Rundenende von selbst neu. */
+  autoRestart: boolean;
+  autoRestartDelaySeconds: number;
 };
 
 export function createDefaultSettings(): AppSettings {
@@ -24,6 +27,8 @@ export function createDefaultSettings(): AppSettings {
     reducedMotion: prefersReducedMotion(),
     muted: false,
     masterVolume: 0.8,
+    autoRestart: true,
+    autoRestartDelaySeconds: 12,
   };
 }
 
@@ -54,6 +59,15 @@ export function migrateSettings(raw: unknown): AppSettings {
       Number.isFinite(record["masterVolume"])
         ? Math.max(0, Math.min(1, record["masterVolume"] as number))
         : defaults.masterVolume,
+    autoRestart:
+      typeof record["autoRestart"] === "boolean"
+        ? record["autoRestart"]
+        : defaults.autoRestart,
+    autoRestartDelaySeconds:
+      typeof record["autoRestartDelaySeconds"] === "number" &&
+      Number.isFinite(record["autoRestartDelaySeconds"])
+        ? Math.max(3, Math.min(120, record["autoRestartDelaySeconds"] as number))
+        : defaults.autoRestartDelaySeconds,
   };
 }
 
