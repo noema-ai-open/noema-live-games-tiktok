@@ -90,6 +90,10 @@ origin (e.g. the Vite dev server on port 4173).
 - To get the HTTP probes as well, serve the game from the same origin as the
   bridge or put a local reverse proxy in front of both.
 
+Because the bridge binds hard to `127.0.0.1`, it cannot be reached from another
+host at all. The game page, the bridge and the streaming software (TikTok LIVE
+Studio or OBS) therefore have to run on the same machine.
+
 ## Credentials
 
 The game asks for no TikTok password, cookie, session id, QR login or access

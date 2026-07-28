@@ -10,7 +10,7 @@ third-party images, icons, fonts or sounds.
 - Two scenes: `AscentScene` (world) and `HudScene` (overlay). The HUD has its
   own camera, so camera shake never moves the readouts.
 - The whole level fits on screen, so there is no scrolling camera to fight with
-  in OBS. Depth comes from parallax layers, not from camera movement.
+  in a browser/link source. Depth comes from parallax layers, not from camera movement.
 
 ## Layers (back to front)
 
@@ -113,7 +113,7 @@ hard-coded — and a status chip row (shield, lift, hazard, environment) along t
 very bottom edge. A vertical progress rail on the right shows overall ascent.
 
 Icons are geometric glyphs (`+ = ↑ ↕ ◆ ★ ≈ ○ ▼ ~ ●`) that exist in every common
-UI font, so nothing renders as a placeholder box in OBS.
+UI font, so nothing renders as a placeholder box in TikTok LIVE Studio or OBS.
 
 Operator-only information (logs, diagnostics, connection details) never appears
 in the stream view.

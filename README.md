@@ -56,13 +56,35 @@ bridge. All processing is local.
 | URL | Purpose |
 | --- | --- |
 | `http://127.0.0.1:4173/?view=operator` | Default. Game preview plus the local control panel. |
-| `http://127.0.0.1:4173/?view=stream` | Clean 9:16 capture surface for OBS or TikTok LIVE Studio. |
+| `http://127.0.0.1:4173/?view=stream` | Clean 9:16 capture surface for the streaming software. |
 | `…/?view=stream&autostart=1` | Same, and the round starts without a click. |
 
 The stream view reuses the connection and accessibility settings last saved in
 the operator view and shows no technical details.
 
-**OBS browser source:** width 720, height 1280, URL as above.
+### TikTok LIVE Studio
+
+1. `pnpm build` then `pnpm preview` (serves the built app on
+   `http://127.0.0.1:4173`).
+2. In LIVE Studio: **Quelle hinzufügen → Link**, paste
+   `http://127.0.0.1:4173/?view=stream&autostart=1`.
+3. Set the source size to **720 × 1280**.
+
+Keep the operator view open in a normal browser window on the side — that is
+where round controls, safe mode and the gift mapping live.
+
+### OBS
+
+Browser source, width 720, height 1280, same URL.
+
+### Where things have to run
+
+The bridge binds hard to `127.0.0.1` and is not reachable across the network by
+design. The game page talks to the bridge from the machine it is displayed on.
+So **bridge, game server and streaming software all belong on the same
+machine** — a `127.0.0.1` bridge address cannot be reached from another host,
+and serving the page from another host while pointing it at `127.0.0.1` is
+blocked by the browser's private-network rules.
 
 ## Operator view
 

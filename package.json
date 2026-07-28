@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "pnpm --filter @noema/live-game dev",
     "build": "pnpm -r build",
+    "preview": "pnpm --filter @noema/live-game preview",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @noema/live-game test",
     "clean": "pnpm -r clean"
