@@ -2,21 +2,27 @@
 
 Anleitung für den Betrieb im Stream. Keine Programmierkenntnisse nötig.
 
-## Das Spielprinzip in vier Sätzen
+## Das Spielprinzip
 
-Rund 30 kleine Roboter laufen von unten nach oben durch einen beschädigten
+Rund 30 kleine Roboter klettern von unten nach oben durch einen unfertigen
 Turm. Sie laufen von allein — niemand steuert sie direkt. Eine Runde dauert
-vier Minuten, und das Team hat gewonnen, wenn mindestens 21 von 30 oben
-ankommen. Die Zuschauer helfen oder sabotieren mit Likes und Geschenken.
+**20 Minuten**, und das Team hat gewonnen, wenn mindestens 21 von 30 oben
+ankommen.
 
-Es gibt zwei Wege nach oben:
+**Der Turm ist absichtlich nicht fertig.** An mehreren Stellen fehlt ein Stück
+Weg: eine Lücke ohne Brücke, ein Sprungfeld, das erst aufgebaut werden muss.
+Ein Roboter, der dort ankommt, **bleibt stehen und stellt sich an**. Je länger
+die Schlange, desto deutlicher sieht jeder Zuschauer, wo Hilfe fehlt.
 
-- **Blau = sicherer Weg.** Langsamer, aber mit Aufzug und Kontrollpunkten.
-- **Rot = riskanter Weg.** Schneller, führt aber über eine Lücke. Ohne Brücke
-  fallen die Roboter dort hinunter.
+Über jeder unfertigen Stelle steht, wie weit sie ist — zum Beispiel
+`BRÜCKE 2  12/30`. Kommt ein Geschenk, wächst der Balken. Ist er voll, geht der
+Übergang auf und der Stau löst sich sichtbar.
 
-Jeder fünfte Roboter nimmt den riskanten Weg. Deshalb ist die Brücke früh im
-Stream meistens das Wichtigste.
+Der Aufzug ist eine echte Kabine: Sie hält unten, öffnet die Türen, die
+Roboter steigen ein, fahren hoch und steigen oben wieder aus.
+
+Wer heruntergestoßen wird, fällt auf das Deck darunter und läuft weiter —
+verloren ist nur, wer ganz unten durchfällt.
 
 ## Ein Stream von Anfang bis Ende
 
@@ -52,20 +58,21 @@ ist.
 
 | Geschenk | Wirkung |
 | --- | --- |
-| Rose | Reparatur — baut Beschädigtes wieder auf, auch die Brücke |
+| Rose | Aufbau — geht immer dorthin, wo die meisten warten |
 | Finger Heart | Team-Energie |
-| Bridge Crate | Brücke über die Lücke |
-| Jump Pad | Sprungfeld, ersetzt die Brücke vorübergehend |
+| Bridge Crate | Schaltet eine Lücke komplett frei |
+| Jump Pad | Sprungfeld — schleudert die Roboter über eine Lücke, nur zeitlich begrenzt |
 | Lift Core | Lift-Overdrive, der Aufzug fährt doppelt so schnell |
 | Rescue Drone | Rettet einen fallenden Roboter |
 | Team Aegis | Team-Schild, alle Roboter sind kurz unverwundbar |
-| Crosswind | Sturm — Sabotage, drückt die Roboter zur Seite |
-| Fault Line | Erdbeben — Sabotage, wirft Roboter vom riskanten Weg |
+| Crosswind | Sturm — Sabotage |
+| Fault Line | Erdbeben — reißt einen gebauten Übergang ein und stößt Roboter vom Deck |
 | Galaxy | **ZAR-BOMBE** |
 
 **Kostenlos und trotzdem wichtig:** Likes, Follows und Shares laden die
-Team-Energie auf. Ohne einen einzigen Cent kann die Runde gewonnen werden — nur
-langsamer. Das ist Absicht.
+Team-Energie auf. Ist der Balken voll, **schaltet er von selbst einen Übergang
+frei** und beginnt wieder bei null. Ohne einen einzigen Cent kann die Runde
+gewonnen werden — nur langsamer. Das ist Absicht.
 
 Grundregel der Balance: Helfen ist billig, Zerstören ist teuer. Sabotage
 kostet ein Vielfaches der vergleichbaren Hilfe.
