@@ -157,8 +157,18 @@ etwas komisch aussah und du wissen willst, ob es an dir oder am Spiel lag.
 ## Wenn etwas nicht stimmt
 
 **Keine Ereignisse, obwohl Zuschauer da sind**
-Läuft die Bridge? Sie muss auf demselben Rechner laufen. Steht im Operator
-*Live verbunden* oder *Reconnect*?
+
+Erst im Operator nachsehen, was dort steht:
+
+- *Reconnect* oder *Fehler* → Das Spiel erreicht die Bridge nicht. Läuft sie?
+  Sie muss auf demselben Rechner laufen.
+- *Live verbunden · keine TikTok-Ereignisse* → Das Spiel und die Bridge reden
+  miteinander, aber die Bridge bekommt von TikTok nichts. Das ist fast immer
+  der Fall, wenn der Livestream gerade nicht läuft.
+
+Im Fenster der Bridge selbst steht der Verbindungszustand zu TikTok. Solange
+dort *offline* steht, kann auch das Spiel nichts anzeigen — dann hilft nur:
+Livestream starten und in der Bridge den öffentlichen Namen prüfen.
 
 **Ein Geschenk bewirkt nichts**
 Das passiert nur, wenn TikTok keinen Münzwert mitgeschickt hat. Solche Fälle

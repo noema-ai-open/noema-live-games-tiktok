@@ -532,11 +532,25 @@ export class OperatorPanel {
         : "keine Quelle",
     );
     const statusLabel = snapshot ? STATUS_LABELS[snapshot.status] : "—";
+    // Verbunden, aber still: Das ist der haeufigste Fall und sieht sonst aus
+    // wie ein Fehler. Die Bridge steht dann, nur TikTok sendet nichts.
+    const idleMs =
+      snapshot?.lastEventAt === null || snapshot?.lastEventAt === undefined
+        ? Infinity
+        : Date.now() - snapshot.lastEventAt;
+    const silent =
+      snapshot?.status === "connected" &&
+      snapshot.connectorId === "noema-bridge" &&
+      idleMs > 25000;
     this.setText(
       "conn-status",
-      !snapshot || snapshot.detail === statusLabel
+      !snapshot
         ? statusLabel
-        : `${statusLabel} · ${snapshot.detail}`,
+        : silent
+          ? `${statusLabel} · keine TikTok-Ereignisse — läuft dein Livestream?`
+          : snapshot.detail === statusLabel
+            ? statusLabel
+            : `${statusLabel} · ${snapshot.detail}`,
     );
     this.setText("conn-eps", snapshot ? String(snapshot.eventsPerSecond) : "0");
     this.setText("conn-profile", snapshot?.profile ?? "—");

@@ -6,8 +6,15 @@ export type StartChoice =
   | { mode: "offline" }
   | { mode: "bridge"; address: string };
 
+export type ConnectionTestResult = {
+  /** Ereignis-Stream erreichbar? Das ist die entscheidende Aussage. */
+  stream: boolean;
+  /** Zusaetzliche HTTP-Auskunft, oft durch den Browser blockiert. */
+  http: boolean;
+};
+
 export type StartScreenHandlers = {
-  onTestConnection: (address: string) => Promise<boolean>;
+  onTestConnection: (address: string) => Promise<ConnectionTestResult>;
   onStart: (choice: StartChoice) => void;
   onAddressChange: (address: string) => void;
 };
@@ -101,10 +108,16 @@ export class StartScreen {
   private async runTest(): Promise<void> {
     this.testResult = "Prüfe Verbindung …";
     this.renderTestResult();
-    const reachable = await this.handlers.onTestConnection(this.addressValue());
-    this.testResult = reachable
-      ? "Bridge über HTTP erreichbar."
-      : "HTTP-Prüfung nicht möglich (normal ohne Proxy). Der Ereignis-Stream wird beim Verbinden geprüft.";
+    const result = await this.handlers.onTestConnection(this.addressValue());
+    if (!result.stream) {
+      this.testResult =
+        "Keine Verbindung zur Bridge. Läuft sie auf diesem Rechner, und stimmt die Adresse?";
+    } else if (result.http) {
+      this.testResult = "Bridge erreichbar, Ereignis-Stream offen.";
+    } else {
+      this.testResult =
+        "Ereignis-Stream offen — die Bridge antwortet. Ob TikTok-Ereignisse ankommen, siehst du nach dem Verbinden am Zähler.";
+    }
     this.renderTestResult();
   }
 

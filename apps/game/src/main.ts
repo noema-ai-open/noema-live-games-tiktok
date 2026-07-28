@@ -143,7 +143,10 @@ if (viewMode === "operator") {
     onAddressChange: (address) => persist({ ...settings, bridgeAddress: address }),
     onTestConnection: async (address) => {
       connectors.bridge.setAddress(address);
-      return connectors.bridge.probeRest();
+      // Der Ereignis-Stream ist die verlaessliche Pruefung; HTTP ist Zugabe.
+      const stream = await connectors.bridge.probeWebSocket();
+      const http = await connectors.bridge.probeRest();
+      return { stream, http };
     },
     onStart: (choice) => {
       startScreen?.hide();

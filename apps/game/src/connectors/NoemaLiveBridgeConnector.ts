@@ -60,6 +60,44 @@ export class NoemaLiveBridgeConnector extends BaseConnector {
     this.setStatus("offline", "Getrennt");
   }
 
+  /**
+   * Prueft den Ereignis-Stream selbst — nicht nur HTTP.
+   *
+   * Der WebSocket ist der Weg, ueber den die Ereignisse tatsaechlich kommen,
+   * und er unterliegt keiner CORS-Beschraenkung. Deshalb ist er die einzige
+   * Pruefung, die eine verlaessliche Aussage liefert.
+   */
+  probeWebSocket(timeoutMs = 6000): Promise<boolean> {
+    return new Promise((resolve) => {
+      let socket: WebSocket;
+      try {
+        socket = this.createSocket(bridgeWebSocketUrl(this.options.address));
+      } catch {
+        resolve(false);
+        return;
+      }
+      let settled = false;
+      const finish = (ok: boolean): void => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        socket.onopen = null;
+        socket.onerror = null;
+        socket.onclose = null;
+        try {
+          socket.close();
+        } catch {
+          /* schon geschlossen */
+        }
+        resolve(ok);
+      };
+      const timer = setTimeout(() => finish(false), timeoutMs);
+      socket.onopen = () => finish(true);
+      socket.onerror = () => finish(false);
+      socket.onclose = () => finish(false);
+    });
+  }
+
   /** One-shot check used by the "Verbindung testen" button. */
   async probeRest(): Promise<boolean> {
     try {
