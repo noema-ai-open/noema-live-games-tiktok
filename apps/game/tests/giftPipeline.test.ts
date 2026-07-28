@@ -279,8 +279,9 @@ describe("rules engine", () => {
     }
     engine.handle(
       giftEvent(
-        { giftName: "Team Aegis", comboFinal: true, coinValue: 999 },
-        { eventId: "aegis" },
+        // 199 Coins entspricht der Schild-Stufe (Herzen, Rhythmus-Bot).
+        { giftName: "Herzen", comboFinal: true, coinValue: 199 },
+        { eventId: "herzen" },
       ),
       1000,
     );
@@ -315,13 +316,15 @@ describe("gift catalog", () => {
 
   it("ordnet ein voellig unbekanntes Geschenk ueber seinen Muenzwert zu", () => {
     const catalog = createDefaultCatalog();
+    // Muenzwerte echter Geschenke aus der deutschen TikTok-Liste.
     for (const [coins, action] of [
+      [1, "repair"],
       [5, "repair"],
-      [50, "bridge"],
-      [250, "lift"],
-      [999, "team_shield"],
-      [5000, "earthquake"],
-      [25000, "tsar_bomb"],
+      [30, "bridge"],
+      [88, "lift"],
+      [199, "team_shield"],
+      [999, "earthquake"],
+      [34000, "tsar_bomb"],
     ] as const) {
       const result = resolveGift(catalog, {
         giftId: `nie-gesehen-${coins}`,

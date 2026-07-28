@@ -82,13 +82,16 @@ function tier(
  * ist immer der Muenzwert, den die Bridge mitliefert.
  */
 export function createDefaultTiers(): GiftTierRule[] {
+  // Die Grenzen folgen der tatsaechlichen Verteilung im deutschen Katalog:
+  // Der Grossteil der Geschenke kostet 1 bis 99 Coins, ueber 400 wird es sehr
+  // duenn. Eine Stufe erst ab 500 haette im Stream fast nie ausgeloest.
   return [
     tier("tier-1", "1–9 · Rose, GG, Bussi", 1, 9, "repair", 20),
-    tier("tier-2", "10–99 · Donut, Capybara", 10, 99, "bridge", 1),
-    tier("tier-3", "100–499 · Handherz, Konfetti", 100, 499, "lift", 18),
-    tier("tier-4", "500–1.999 · Göttliche Flamme", 500, 1999, "team_shield", 15),
-    tier("tier-5", "2.000–9.999 Coins", 2000, 9999, "earthquake", 7),
-    tier("tier-6", "ab 10.000 · Zeus", 10000, Infinity, "tsar_bomb", 1),
+    tier("tier-2", "10–49 · Donut, S Blumen", 10, 49, "bridge", 1),
+    tier("tier-3", "50–99 · Papierkranich, Pilz", 50, 99, "lift", 18),
+    tier("tier-4", "100–299 · Handherz, Herzen", 100, 299, "team_shield", 15),
+    tier("tier-5", "300–999 · Göttliche Flamme", 300, 999, "earthquake", 7),
+    tier("tier-6", "ab 1.000 · Zeus", 1000, Infinity, "tsar_bomb", 1),
   ];
 }
 

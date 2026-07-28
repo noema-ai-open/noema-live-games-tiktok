@@ -30,8 +30,8 @@ describe("live session", () => {
   it("turns a live gift into an ordered command", () => {
     const { simulation, connectors, live } = createSession();
     connectors.mock.injectGift({
-      giftId: "name:bridge-crate",
-      giftName: "Bridge Crate",
+      giftId: "name:donut",
+      giftName: "Donut",
       coinValue: 30,
       comboFinal: true,
     });
@@ -50,10 +50,11 @@ describe("live session", () => {
   it("keeps sequence numbers monotonic while dispatching mixed priorities", () => {
     const { simulation, connectors, live } = createSession();
     connectors.mock.injectSimple("like", undefined, 5);
+    // 199 Coins ist die Schild-Stufe und damit ein kritischer Befehl.
     connectors.mock.injectGift({
-      giftId: "name:team-aegis",
-      giftName: "Team Aegis",
-      coinValue: 999,
+      giftId: "name:herzen",
+      giftName: "Herzen",
+      coinValue: 199,
       comboFinal: true,
     });
     connectors.mock.injectSimple("follow");
@@ -70,11 +71,15 @@ describe("live session", () => {
     const { simulation, connectors, live } = createSession(4242);
     const replays = new ReplayService();
 
-    for (const gift of ["Bridge Crate", "Lift Core", "Team Aegis"]) {
+    for (const [gift, coins] of [
+      ["Donut", 30],
+      ["Papierkranich", 99],
+      ["Herzen", 199],
+    ] as const) {
       connectors.mock.injectGift({
-        giftId: `name:${gift.toLowerCase().replace(/\s+/g, "-")}`,
+        giftId: `name:${gift.toLowerCase()}`,
         giftName: gift,
-        coinValue: 100,
+        coinValue: coins,
         comboFinal: true,
       });
       live.dispatch();

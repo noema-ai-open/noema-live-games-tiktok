@@ -35,15 +35,18 @@ type TestGift = {
   coins: number;
 };
 
-/** Test gifts mirror the default catalog rows so the buttons stay meaningful. */
+/**
+ * Echte Geschenke aus der deutschen TikTok-Liste mit ihrem Muenzwert. So testet
+ * man genau das, was live auch ankommt — inklusive der richtigen Stufe.
+ */
 const TEST_GIFTS: readonly TestGift[] = [
-  { id: "rose", label: "Rose", tier: "1–9 Coins", giftName: "Rose", coins: 1 },
-  { id: "bridge", label: "Bridge Crate", tier: "10–99", giftName: "Bridge Crate", coins: 30 },
-  { id: "jump", label: "Jump Pad", tier: "10–99", giftName: "Jump Pad", coins: 45 },
-  { id: "lift", label: "Lift Core", tier: "100–499", giftName: "Lift Core", coins: 199 },
-  { id: "aegis", label: "Team Aegis", tier: "500–1.999", giftName: "Team Aegis", coins: 999 },
-  { id: "wind", label: "Crosswind", tier: "Sabotage", giftName: "Crosswind", coins: 500 },
-  { id: "fault", label: "Fault Line", tier: "Sabotage", giftName: "Fault Line", coins: 3000 },
+  { id: "rose", label: "Rose", tier: "1 Coin · Aufbau", giftName: "Rose", coins: 1 },
+  { id: "gg", label: "GG", tier: "1 Coin · Aufbau", giftName: "GG", coins: 1 },
+  { id: "donut", label: "Donut", tier: "30 · Lücke", giftName: "Donut", coins: 30 },
+  { id: "kranich", label: "Papierkranich", tier: "99 · Lift", giftName: "Papierkranich", coins: 99 },
+  { id: "handherz", label: "Handherz", tier: "100 · Schild", giftName: "Handherz", coins: 100 },
+  { id: "herzen", label: "Herzen", tier: "199 · Schild", giftName: "Herzen", coins: 199 },
+  { id: "flamme", label: "Göttliche Flamme", tier: "999 · Erdbeben", giftName: "Göttliche Flamme", coins: 999 },
 ] as const;
 
 const STATUS_LABELS: Record<ConnectionSnapshot["status"], string> = {
@@ -164,7 +167,7 @@ export class OperatorPanel {
           <button data-action="duplicate">Doppeltes Ereignis senden</button>
         </div>
         <button class="tsar-button" data-test-gift="tsar">
-          <span>⚠</span><b>ZAR-BOMBE</b><small>Höchste Stufe · globale Abklingzeit</small>
+          <span>⚠</span><b>ZAR-BOMBE</b><small>Zeus · 34.000 Coins · globale Abklingzeit</small>
         </button>
       </section>
 
@@ -306,8 +309,8 @@ export class OperatorPanel {
       this.deps.connectors.mock.injectGift(
         {
           giftId: "mock_tsar_bomb",
-          giftName: "ZAR-BOMBE Testgeschenk",
-          coinValue: 10000,
+          giftName: "Zeus",
+          coinValue: 34000,
           comboFinal: true,
         },
         MOCK_VIEWERS[0]!,

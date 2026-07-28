@@ -63,12 +63,16 @@ nie gesehen hat.
 
 | Münzwert | Beispiele aus der TikTok-Liste | Wirkung |
 | --- | --- | --- |
-| 1–9 | Rose, GG, Bussi, Fingerherz | Aufbau — geht dorthin, wo die meisten warten |
-| 10–99 | Donut, Capybara, Papierkranich | Schaltet eine Lücke frei |
-| 100–499 | Handherz, Konfetti, Herzen | Lift-Overdrive |
-| 500–1.999 | Göttliche Flamme | Team-Schild |
-| 2.000–9.999 | — | Erdbeben (Sabotage) |
-| ab 10.000 | Zeus | **ZAR-BOMBE** |
+| 1–9 | Rose, GG, Bussi, Fingerherz, Eiswaffel | Aufbau — geht dorthin, wo die meisten warten |
+| 10–49 | Rosa, S Blumen, Parfüm, Donut, Capybara | Schaltet eine Lücke frei |
+| 50–99 | Schmetterling, Papierkranich, Singender Pilz | Lift-Overdrive |
+| 100–299 | Handherz, Konfetti, Herzen, Blast-Trommel | Team-Schild |
+| 300–999 | Guten Abend, Göttliche Flamme | Erdbeben (Sabotage) |
+| ab 1.000 | Zeus | **ZAR-BOMBE** |
+
+Die Grenzen liegen bewusst niedrig: Der Großteil der TikTok-Geschenke kostet
+1 bis 99 Coins, oberhalb von 400 wird es sehr dünn. Stufen erst ab 500 hätten
+im Stream fast nie ausgelöst.
 
 Diese Stufen kannst du im Operator-Fenster unter *Münzstufen* jederzeit ändern:
 andere Wirkung, andere Stärke, andere Abklingzeit, oder ganz abschalten.
