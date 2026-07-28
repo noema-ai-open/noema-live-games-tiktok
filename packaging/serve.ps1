@@ -1,27 +1,33 @@
-<#
+﻿<#
 .SYNOPSIS
-  Startet NOEMA Ascent lokal und öffnet die Operator-Ansicht im Browser.
+  Startet NOEMA Ascent lokal und oeffnet die Operator-Ansicht im Browser.
 
 .DESCRIPTION
   Kleiner statischer Webserver auf Basis von System.Net.HttpListener. Der ist
   fest in Windows eingebaut, deshalb braucht die installierte Version weder
   Node.js noch Python.
 
-  Der Server lauscht ausschließlich auf localhost. Es gibt keine Anmeldung und
-  keine Netzwerkfreigabe, weil die Seite nur für diesen Rechner gedacht ist.
+  Der Server lauscht ausschliesslich auf localhost. Es gibt keine Anmeldung und
+  keine Netzwerkfreigabe, weil die Seite nur fuer diesen Rechner gedacht ist.
+
+  Das Skript muss unter Windows PowerShell 5.1 laufen, nicht nur unter
+  PowerShell 7 — die Startmenue-Verknuepfung benutzt 5.1. Deshalb wird hier
+  bewusst kein async/await verwendet: Task.AsyncWaitHandle ist eine explizit
+  implementierte Schnittstelle und in 5.1 nicht erreichbar.
 
 .PARAMETER Port
-  Startport. Ist er belegt, werden die nächsten Ports probiert.
+  Startport. Ist er belegt, werden die naechsten Ports probiert.
 
 .PARAMETER Root
   Ordner mit den gebauten Dateien. Standard: Unterordner "app" neben diesem
   Skript.
 
 .PARAMETER View
-  Welche Ansicht beim Start geöffnet wird: operator, stream oder none.
+  Welche Ansicht beim Start geoeffnet wird: operator, stream oder none.
 
 .PARAMETER NoBrowser
-  Öffnet keinen Browser. Wird vom CI-Rauchtest benutzt.
+  Oeffnet keinen Browser und wartet im Fehlerfall nicht auf eine Eingabe.
+  Wird vom CI-Rauchtest benutzt.
 #>
 [CmdletBinding()]
 param(
@@ -29,34 +35,60 @@ param(
   [string]$Root = (Join-Path $PSScriptRoot "app"),
   [ValidateSet("operator", "stream", "none")]
   [string]$View = "operator",
-  [switch]$NoBrowser,
-  [int]$StopAfterSeconds = 0
+  [switch]$NoBrowser
 )
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path -LiteralPath $Root)) {
-  Write-Error "Ordner mit den Spieldateien nicht gefunden: $Root"
+# --- Protokoll -------------------------------------------------------------
+# Damit ein Fehlstart nachvollziehbar bleibt, auch wenn das Fenster zugeht.
+$logBase = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { $env:TEMP }
+$logDirectory = Join-Path $logBase "NOEMA\Ascent"
+New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+$logFile = Join-Path $logDirectory "start.log"
+
+function Write-Log([string]$message) {
+  $line = "{0}  {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $message
+  try { Add-Content -LiteralPath $logFile -Value $line -Encoding UTF8 } catch { }
+}
+
+function Stop-WithError([string]$message, $errorRecord) {
+  Write-Log "FEHLER: $message"
+  if ($errorRecord) { Write-Log $errorRecord.ToString() }
+  Write-Host ""
+  Write-Host "  NOEMA Ascent konnte nicht starten." -ForegroundColor Red
+  Write-Host "  $message" -ForegroundColor Red
+  if ($errorRecord) { Write-Host "  $errorRecord" -ForegroundColor DarkRed }
+  Write-Host ""
+  Write-Host "  Protokoll: $logFile" -ForegroundColor DarkGray
+  Write-Host ""
+  if (-not $NoBrowser) { Read-Host "  Zum Schliessen die Eingabetaste druecken" | Out-Null }
   exit 1
+}
+
+Write-Log "Start: PSVersion=$($PSVersionTable.PSVersion) Root=$Root Port=$Port View=$View"
+
+if (-not (Test-Path -LiteralPath $Root)) {
+  Stop-WithError "Ordner mit den Spieldateien nicht gefunden: $Root" $null
 }
 $rootFull = (Resolve-Path -LiteralPath $Root).Path
 
 $mimeTypes = @{
-  ".html" = "text/html; charset=utf-8"
-  ".js"   = "text/javascript; charset=utf-8"
-  ".mjs"  = "text/javascript; charset=utf-8"
-  ".css"  = "text/css; charset=utf-8"
-  ".json" = "application/json; charset=utf-8"
-  ".svg"  = "image/svg+xml"
-  ".png"  = "image/png"
-  ".jpg"  = "image/jpeg"
-  ".jpeg" = "image/jpeg"
-  ".webp" = "image/webp"
-  ".ico"  = "image/x-icon"
-  ".woff" = "font/woff"
+  ".html"  = "text/html; charset=utf-8"
+  ".js"    = "text/javascript; charset=utf-8"
+  ".mjs"   = "text/javascript; charset=utf-8"
+  ".css"   = "text/css; charset=utf-8"
+  ".json"  = "application/json; charset=utf-8"
+  ".svg"   = "image/svg+xml"
+  ".png"   = "image/png"
+  ".jpg"   = "image/jpeg"
+  ".jpeg"  = "image/jpeg"
+  ".webp"  = "image/webp"
+  ".ico"   = "image/x-icon"
+  ".woff"  = "font/woff"
   ".woff2" = "font/woff2"
-  ".map"  = "application/json; charset=utf-8"
-  ".txt"  = "text/plain; charset=utf-8"
+  ".map"   = "application/json; charset=utf-8"
+  ".txt"   = "text/plain; charset=utf-8"
 }
 
 function Get-ContentType([string]$path) {
@@ -65,13 +97,17 @@ function Get-ContentType([string]$path) {
   return "application/octet-stream"
 }
 
-# Verhindert, dass eine manipulierte URL Dateien außerhalb des Ordners liest.
+# Verhindert, dass eine manipulierte URL Dateien ausserhalb des Ordners liest.
 function Resolve-RequestPath([string]$urlPath) {
   $relative = [Uri]::UnescapeDataString($urlPath).TrimStart("/")
   if ([string]::IsNullOrWhiteSpace($relative)) { $relative = "index.html" }
   $relative = $relative -replace "/", "\"
-  $candidate = [System.IO.Path]::GetFullPath((Join-Path $rootFull $relative))
-  if (-not $candidate.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase)) {
+  try {
+    $candidate = [System.IO.Path]::GetFullPath((Join-Path $rootFull $relative))
+  } catch {
+    return $null
+  }
+  if (-not $candidate.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
     return $null
   }
   if (Test-Path -LiteralPath $candidate -PathType Container) {
@@ -80,32 +116,35 @@ function Resolve-RequestPath([string]$urlPath) {
   return $candidate
 }
 
-$listener = [System.Net.HttpListener]::new()
+# --- Server starten --------------------------------------------------------
+$listener = New-Object System.Net.HttpListener
 $boundPort = 0
+$lastError = $null
 foreach ($candidatePort in $Port..($Port + 9)) {
   try {
     $listener.Prefixes.Clear()
-    # "localhost" ist der einzige Präfix, den Windows ohne Administratorrechte
+    # "localhost" ist der einzige Praefix, den Windows ohne Administratorrechte
     # erlaubt. Damit bleibt der Server auch ohne UAC-Abfrage startbar.
     $listener.Prefixes.Add("http://localhost:$candidatePort/")
     $listener.Start()
     $boundPort = $candidatePort
     break
-  } catch [System.Net.HttpListenerException] {
-    $listener.Close()
-    $listener = [System.Net.HttpListener]::new()
-    continue
+  } catch {
+    $lastError = $_
+    Write-Log "Port $candidatePort nicht nutzbar: $_"
+    try { $listener.Close() } catch { }
+    $listener = New-Object System.Net.HttpListener
   }
 }
 
 if ($boundPort -eq 0) {
-  Write-Error "Kein freier Port zwischen $Port und $($Port + 9). Läuft NOEMA Ascent schon?"
-  exit 1
+  Stop-WithError "Kein freier Port zwischen $Port und $($Port + 9). Laeuft NOEMA Ascent schon?" $lastError
 }
 
 $baseUrl = "http://localhost:$boundPort"
 $streamUrl = "$baseUrl/?view=stream&autostart=1"
 $operatorUrl = "$baseUrl/?view=operator"
+Write-Log "Server laeuft auf $baseUrl"
 
 Write-Host ""
 Write-Host "  NOEMA Ascent laeuft." -ForegroundColor Green
@@ -122,24 +161,19 @@ Write-Host ""
 
 if (-not $NoBrowser -and $View -ne "none") {
   $target = if ($View -eq "stream") { $streamUrl } else { $operatorUrl }
-  Start-Process $target | Out-Null
+  try { Start-Process $target | Out-Null } catch { Write-Log "Browser konnte nicht geoeffnet werden: $_" }
 }
 
-$deadline = if ($StopAfterSeconds -gt 0) {
-  (Get-Date).AddSeconds($StopAfterSeconds)
-} else {
-  [DateTime]::MaxValue
-}
-
+# --- Anfragen bedienen -----------------------------------------------------
+# Blockierendes GetContext(): laeuft unveraendert unter Windows PowerShell 5.1.
 try {
-  while ($listener.IsListening -and (Get-Date) -lt $deadline) {
-    $contextTask = $listener.GetContextAsync()
-    while (-not $contextTask.AsyncWaitHandle.WaitOne(250)) {
-      if ((Get-Date) -ge $deadline) { break }
+  while ($listener.IsListening) {
+    try {
+      $context = $listener.GetContext()
+    } catch {
+      break
     }
-    if (-not $contextTask.IsCompleted) { break }
 
-    $context = $contextTask.GetAwaiter().GetResult()
     $response = $context.Response
     try {
       $path = Resolve-RequestPath $context.Request.Url.AbsolutePath
@@ -158,12 +192,14 @@ try {
         $response.OutputStream.Write($message, 0, $message.Length)
       }
     } catch {
-      $response.StatusCode = 500
+      Write-Log "Anfragefehler: $_"
+      try { $response.StatusCode = 500 } catch { }
     } finally {
-      $response.OutputStream.Close()
+      try { $response.OutputStream.Close() } catch { }
     }
   }
 } finally {
-  if ($listener.IsListening) { $listener.Stop() }
-  $listener.Close()
+  Write-Log "Server beendet."
+  try { if ($listener.IsListening) { $listener.Stop() } } catch { }
+  try { $listener.Close() } catch { }
 }

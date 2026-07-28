@@ -56,14 +56,22 @@ jobs:
         run: pnpm install --frozen-lockfile && pnpm build
         shell: pwsh
 
-      - name: Rauchtest des mitgelieferten Webservers
-        shell: pwsh
+      - name: Rauchtest des mitgelieferten Webservers (Windows PowerShell 5.1)
+        # Muss 5.1 sein: Die Startmenue-Verknuepfung startet powershell.exe,
+        # nicht pwsh. Ein Test unter 7 uebersieht genau die Unterschiede, die
+        # den Start auf dem Zielrechner scheitern lassen.
+        shell: powershell
         run: |
+          Write-Host "PSVersion: $($PSVersionTable.PSVersion)"
+          if ($PSVersionTable.PSVersion.Major -ne 5) {
+            throw "Rauchtest laeuft nicht unter Windows PowerShell 5.1."
+          }
+
           # Der Installer bringt keine Laufzeitumgebung mit, deshalb muss der
           # HttpListener-Server hier gegen die echten Build-Dateien laufen.
           $job = Start-Job -ScriptBlock {
             param($script, $root)
-            & $script -Root $root -Port 4399 -NoBrowser -View none -StopAfterSeconds 45
+            & $script -Root $root -Port 4399 -NoBrowser -View none
           } -ArgumentList "$PWD/packaging/serve.ps1", "$PWD/apps/game/dist"
 
           $ready = $false
@@ -78,6 +86,7 @@ jobs:
             } catch { }
           }
           if (-not $ready) {
+            Write-Host "--- Ausgabe des Server-Jobs ---"
             Receive-Job $job
             throw "Der lokale Webserver hat die Startseite nicht ausgeliefert."
           }
