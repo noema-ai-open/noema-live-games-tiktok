@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { FIXED_STEP_MS } from "../config/gameConfig";
+import { FIXED_STEP_MS, SIDEBAR_WIDTH } from "../config/gameConfig";
 import { EffectLayer } from "../render/EffectLayer";
 import { LevelRenderer } from "../render/LevelRenderer";
 import { TsarBombRenderer } from "../render/TsarBombRenderer";
@@ -42,6 +42,8 @@ export class AscentScene extends Phaser.Scene {
   create(): void {
     ensureTextures(this);
     this.cameras.main.setBackgroundColor("#03080f");
+    // Die Welt ruecht nach rechts, damit links Platz fuer die Legende bleibt.
+    this.cameras.main.setScroll(-SIDEBAR_WIDTH, 0);
 
     this.world = new WorldRenderer(this);
     this.levelRenderer = new LevelRenderer(this);

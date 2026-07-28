@@ -1,4 +1,14 @@
-export const LOGICAL_WIDTH = 720;
+/**
+ * Die Spielflaeche ist breiter als der Turm.
+ *
+ * Links entsteht dadurch eine Spalte, in der die Geschenklegende gross und
+ * lesbar steht — im Streambild ist das der schwarze Bereich neben dem Turm.
+ * Der Turm selbst behaelt seine Koordinaten; die Weltkamera wird nur
+ * verschoben.
+ */
+export const SIDEBAR_WIDTH = 260;
+export const TOWER_WIDTH = 720;
+export const LOGICAL_WIDTH = SIDEBAR_WIDTH + TOWER_WIDTH;
 export const LOGICAL_HEIGHT = 1280;
 export const FIXED_HZ = 30;
 export const FIXED_STEP_MS = 1000 / FIXED_HZ;

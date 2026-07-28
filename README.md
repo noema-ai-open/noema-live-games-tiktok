@@ -97,14 +97,14 @@ the operator view and shows no technical details.
    (serves the built app on `http://127.0.0.1:4173`).
 2. In LIVE Studio: **Quelle hinzufügen → Link**, paste
    `http://127.0.0.1:4173/?view=stream&autostart=1`.
-3. Set the source size to **720 × 1280**.
+3. Set the source size to **980 × 1280**.
 
 Keep the operator view open in a normal browser window on the side — that is
 where round controls, safe mode and the gift mapping live.
 
 ### OBS
 
-Browser source, width 720, height 1280, same URL.
+Browser source, width 980, height 1280, same URL.
 
 ### Where things have to run
 

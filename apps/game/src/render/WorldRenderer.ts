@@ -1,5 +1,9 @@
 import Phaser from "phaser";
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from "../config/gameConfig";
+import {
+  LOGICAL_HEIGHT,
+  LOGICAL_WIDTH,
+  SIDEBAR_WIDTH,
+} from "../config/gameConfig";
 import { SeededRandom } from "../simulation/rng";
 import { PALETTE } from "./palette";
 import { TEXTURE_KEYS } from "./textures";
@@ -74,14 +78,14 @@ export class WorldRenderer {
       PALETTE.skyBottom,
       1,
     );
-    graphics.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    graphics.fillRect(-SIDEBAR_WIDTH, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     // Warm horizon glow behind the tower base.
     graphics.fillStyle(PALETTE.warn, 0.06);
     graphics.fillEllipse(360, 1180, 900, 420);
 
     const grain = this.scene.add
-      .tileSprite(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, TEXTURE_KEYS.grain)
+      .tileSprite(360 - SIDEBAR_WIDTH / 2, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, TEXTURE_KEYS.grain)
       .setDepth(-39)
       .setAlpha(0.5);
     grain.setBlendMode(Phaser.BlendModes.SCREEN);

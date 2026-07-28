@@ -1,5 +1,13 @@
 import Phaser from "phaser";
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH, TICKS } from "../config/gameConfig";
+import {
+  LOGICAL_HEIGHT,
+  LOGICAL_WIDTH,
+  SIDEBAR_WIDTH,
+  TICKS,
+} from "../config/gameConfig";
+
+/** Mitte der sichtbaren Welt, seit die Kamera nach links verschoben ist. */
+const WORLD_CENTER_X = 360 - SIDEBAR_WIDTH / 2;
 import type { SimulationState, TsarPhase } from "../simulation/types";
 import type { EffectLayer } from "./EffectLayer";
 import { PALETTE, toCss } from "./palette";
@@ -37,12 +45,12 @@ export class TsarBombRenderer {
     this.overlay = scene.add.graphics().setDepth(60).setVisible(false);
 
     this.vignette = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0x1a0009, 1)
+      .rectangle(WORLD_CENTER_X, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0x1a0009, 1)
       .setDepth(59)
       .setAlpha(0);
 
     this.alarmBar = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, PALETTE.catastrophe, 1)
+      .rectangle(WORLD_CENTER_X, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, PALETTE.catastrophe, 1)
       .setDepth(58)
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -110,7 +118,7 @@ export class TsarBombRenderer {
       .setVisible(false);
 
     this.flash = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0xffffff, 1)
+      .rectangle(WORLD_CENTER_X, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0xffffff, 1)
       .setDepth(72)
       .setAlpha(0);
 

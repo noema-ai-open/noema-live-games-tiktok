@@ -6,7 +6,9 @@ third-party images, icons, fonts or sounds.
 
 ## Canvas
 
-- Logical resolution 720 × 1280 (9:16), `Phaser.Scale.FIT`.
+- Logical resolution 980 × 1280: a 720-wide tower plus a 260-wide left
+  column. The column carries the gift legend and the sender feedback, which
+  used to sit on top of the play area and was unreadable on a phone.
 - Two scenes: `AscentScene` (world) and `HudScene` (overlay). The HUD has its
   own camera, so camera shake never moves the readouts.
 - The whole level fits on screen, so there is no scrolling camera to fight with

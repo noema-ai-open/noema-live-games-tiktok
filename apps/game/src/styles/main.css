@@ -65,7 +65,7 @@ body {
   border-radius: 8px;
 }
 
-/* Stream view: nothing but the 9:16 surface, transparent chrome for OBS. */
+/* Stream view: nur die Spielflaeche, transparenter Rahmen fuer LIVE Studio. */
 .stream-layout {
   display: flex;
   justify-content: center;

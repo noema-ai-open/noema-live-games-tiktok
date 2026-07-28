@@ -3,9 +3,13 @@ import {
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
   RESCUE_TARGET,
+  SIDEBAR_WIDTH,
   TICKS,
   WORKER_COUNT,
 } from "../config/gameConfig";
+
+/** Linker Rand des Turmbereichs im Bildschirmraum. */
+const TOWER_X = SIDEBAR_WIDTH;
 import type { FeedbackBus, GiftFeedback } from "../gifts/FeedbackBus";
 import { getAction } from "../gifts/actions";
 import type { GiftCatalogConfig } from "../gifts/giftCatalog";
@@ -123,12 +127,12 @@ export class HudScene extends Phaser.Scene {
     // The plate stops above the exit gate (world y 108) so the goal stays free.
     const plate = this.add.graphics().setDepth(1);
     plate.fillStyle(0x03080f, 0.84);
-    plate.fillRoundedRect(14, 10, 692, 84, 14);
+    plate.fillRoundedRect(TOWER_X + 14, 10, 692, 84, 14);
     plate.lineStyle(2, PALETTE.towerEdge, 0.55);
-    plate.strokeRoundedRect(14, 10, 692, 84, 14);
+    plate.strokeRoundedRect(TOWER_X + 14, 10, 692, 84, 14);
 
     this.add
-      .text(32, 18, "GERETTET", {
+      .text(TOWER_X + 32, 18, "GERETTET", {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
         fontSize: "13px",
@@ -136,7 +140,7 @@ export class HudScene extends Phaser.Scene {
       })
       .setDepth(2);
     this.rescueValue = this.add
-      .text(30, 32, "00 / 30", {
+      .text(TOWER_X + 30, 32, "00 / 30", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontStyle: "bold",
         fontSize: "36px",
@@ -144,7 +148,7 @@ export class HudScene extends Phaser.Scene {
       })
       .setDepth(2);
     this.add
-      .text(32, 74, `ZIEL ${RESCUE_TARGET}`, {
+      .text(TOWER_X + 32, 74, `ZIEL ${RESCUE_TARGET}`, {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
         fontSize: "12px",
@@ -152,14 +156,14 @@ export class HudScene extends Phaser.Scene {
       })
       .setDepth(2);
 
-    this.add.rectangle(214, 80, 150, 7, 0x0e2430, 1).setOrigin(0, 0.5).setDepth(2);
+    this.add.rectangle(TOWER_X + 214, 80, 150, 7, 0x0e2430, 1).setOrigin(0, 0.5).setDepth(2);
     this.rescueBar = this.add
-      .rectangle(214, 80, 150, 7, PALETTE.support, 1)
+      .rectangle(TOWER_X + 214, 80, 150, 7, PALETTE.support, 1)
       .setOrigin(0, 0.5)
       .setDepth(3);
 
     this.add
-      .text(692, 18, "ZEIT", {
+      .text(TOWER_X + 692, 18, "ZEIT", {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
         fontSize: "13px",
@@ -168,7 +172,7 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(1, 0)
       .setDepth(2);
     this.timerValue = this.add
-      .text(692, 32, "04:00", {
+      .text(TOWER_X + 692, 32, "04:00", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontStyle: "bold",
         fontSize: "36px",
@@ -178,20 +182,20 @@ export class HudScene extends Phaser.Scene {
       .setDepth(2);
 
     this.add
-      .text(392, 74, "TEAM-ENERGIE", {
+      .text(TOWER_X + 392, 74, "TEAM-ENERGIE", {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
         fontSize: "12px",
         color: toCss(PALETTE.warn),
       })
       .setDepth(2);
-    this.add.rectangle(512, 80, 130, 7, 0x2a2312, 1).setOrigin(0, 0.5).setDepth(2);
+    this.add.rectangle(TOWER_X + 512, 80, 130, 7, 0x2a2312, 1).setOrigin(0, 0.5).setDepth(2);
     this.energyBar = this.add
-      .rectangle(512, 80, 130, 7, PALETTE.warn, 1)
+      .rectangle(TOWER_X + 512, 80, 130, 7, PALETTE.warn, 1)
       .setOrigin(0, 0.5)
       .setDepth(3);
     this.energyValue = this.add
-      .text(692, 74, "15%", {
+      .text(TOWER_X + 692, 74, "15%", {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
         fontSize: "13px",
@@ -203,7 +207,7 @@ export class HudScene extends Phaser.Scene {
     // Status chips run along the very bottom, clear of the tower and the goal.
     const labels = ["SCHILD", "LIFT", "GEFAHR", "UMWELT"];
     for (const [index, label] of labels.entries()) {
-      const x = 14 + index * 173;
+      const x = TOWER_X + 14 + index * 173;
       const chipPlate = this.add
         .rectangle(x, 1240, 166, 30, 0x05121b, 0.88)
         .setOrigin(0, 0)
@@ -228,15 +232,15 @@ export class HudScene extends Phaser.Scene {
 
   private buildProgressRail(): void {
     this.add
-      .rectangle(700, 640, 10, 420, 0x0a1c28, 0.9)
+      .rectangle(LOGICAL_WIDTH - 20, 640, 10, 420, 0x0a1c28, 0.9)
       .setDepth(2)
       .setOrigin(0.5);
     this.progressFill = this.add
-      .rectangle(700, 850, 10, 420, PALETTE.energy, 0.95)
+      .rectangle(LOGICAL_WIDTH - 20, 850, 10, 420, PALETTE.energy, 0.95)
       .setOrigin(0.5, 1)
       .setDepth(3);
     this.add
-      .text(700, 414, "▲", {
+      .text(LOGICAL_WIDTH - 20, 414, "▲", {
         fontFamily: "Arial, sans-serif",
         fontSize: "16px",
         color: toCss(PALETTE.support),
@@ -245,45 +249,59 @@ export class HudScene extends Phaser.Scene {
       .setDepth(3);
   }
 
+  /**
+   * Linke Spalte: die Geschenklegende gross und ruhig, ausserhalb des
+   * Spielfelds. Im Streambild ist das der schwarze Rand neben dem Turm — dort
+   * stoert sie nichts und ist auf einem Handy lesbar.
+   */
   private buildBottomBar(): void {
     const plate = this.add.graphics().setDepth(1);
-    plate.fillStyle(0x03080f, 0.86);
-    plate.fillRoundedRect(378, 1040, 328, 190, 16);
-    plate.lineStyle(2, PALETTE.towerEdge, 0.5);
-    plate.strokeRoundedRect(378, 1040, 328, 190, 16);
+    plate.fillStyle(0x03080f, 0.9);
+    plate.fillRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 16);
+    plate.lineStyle(2, PALETTE.towerEdge, 0.45);
+    plate.strokeRoundedRect(12, 10, SIDEBAR_WIDTH - 26, 556, 16);
 
     this.add
-      .text(396, 1052, "DEIN GESCHENK WIRKT", {
-        fontFamily: "Inter, Arial, sans-serif",
+      .text(30, 30, "DEIN GESCHENK", {
+        fontFamily: "Inter, Arial Black, sans-serif",
         fontStyle: "bold",
-        fontSize: "14px",
+        fontSize: "22px",
         color: toCss(PALETTE.warn),
       })
       .setDepth(2);
+    this.add
+      .text(30, 56, "WIRKT SOFORT", {
+        fontFamily: "Inter, Arial Black, sans-serif",
+        fontStyle: "bold",
+        fontSize: "22px",
+        color: toCss(PALETTE.warn),
+      })
+      .setDepth(2);
+
     this.legend = this.add
-      .text(396, 1076, this.buildLegend(), {
+      .text(30, 96, this.buildLegend(), {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
-        fontSize: "13px",
+        fontSize: "17px",
         color: PALETTE.text,
-        lineSpacing: 4,
+        lineSpacing: 11,
       })
       .setDepth(2);
 
     this.bigEvent = this.add
-      .text(542, 1214, "", {
+      .text(30, 590, "", {
         fontFamily: "Inter, Arial, sans-serif",
         fontStyle: "bold",
-        fontSize: "13px",
+        fontSize: "14px",
         color: PALETTE.textDim,
+        wordWrap: { width: SIDEBAR_WIDTH - 60 },
       })
-      .setOrigin(0.5)
       .setDepth(2);
 
     this.add
-      .text(360, 1224, "Powered by NOEMA AI", {
+      .text(SIDEBAR_WIDTH / 2, 1252, "Powered by NOEMA AI", {
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "12px",
+        fontSize: "13px",
         color: "#5d7688",
       })
       .setOrigin(0.5)
@@ -300,24 +318,31 @@ export class HudScene extends Phaser.Scene {
       if (!rule.enabled) continue;
       const definition = getAction(rule.action);
       if (definition.id === "none") continue;
-      lines.push(`${definition.icon} ${rule.label} → ${definition.label}`);
-      if (lines.length >= 6) break;
+      // Muenzbereich fett voran, Wirkung darunter — in der schmalen Spalte
+      // liest sich das besser als eine lange Zeile.
+      const range =
+        rule.maxCoins === Infinity
+          ? `ab ${rule.minCoins}`
+          : `${rule.minCoins}–${rule.maxCoins}`;
+      lines.push(`${definition.icon}  ${range} Coins`);
+      lines.push(`     ${definition.label}`);
+      if (lines.length >= 12) break;
     }
     return lines.join("\n");
   }
 
   private buildToasts(): void {
     for (let index = 0; index < TOAST_SLOTS; index += 1) {
-      const y = 1196 - index * 58;
+      const y = 1196 - index * 66;
       const plate = this.add
-        .rectangle(0, 0, 348, 50, 0x061420, 0.94)
+        .rectangle(0, 0, SIDEBAR_WIDTH - 26, 58, 0x061420, 0.94)
         .setOrigin(0, 0.5)
         .setStrokeStyle(2, PALETTE.energy, 0.85);
       const icon = this.add
         .text(16, 0, "+", { fontSize: "24px" })
         .setOrigin(0, 0.5);
       const title = this.add
-        .text(54, -10, "", {
+        .text(50, -13, "", {
           fontFamily: "Inter, Arial, sans-serif",
           fontStyle: "bold",
           fontSize: "17px",
@@ -325,7 +350,7 @@ export class HudScene extends Phaser.Scene {
         })
         .setOrigin(0, 0.5);
       const subtitle = this.add
-        .text(54, 11, "", {
+        .text(50, 10, "", {
           fontFamily: "Inter, Arial, sans-serif",
           fontStyle: "bold",
           fontSize: "14px",
@@ -333,7 +358,7 @@ export class HudScene extends Phaser.Scene {
         })
         .setOrigin(0, 0.5);
       const count = this.add
-        .text(334, 0, "", {
+        .text(SIDEBAR_WIDTH - 40, 0, "", {
           fontFamily: "Inter, Arial Black, sans-serif",
           fontStyle: "bold",
           fontSize: "22px",
@@ -341,7 +366,7 @@ export class HudScene extends Phaser.Scene {
         })
         .setOrigin(1, 0.5);
       const container = this.add
-        .container(18, y, [plate, icon, title, subtitle, count])
+        .container(12, y, [plate, icon, title, subtitle, count])
         .setDepth(6)
         .setVisible(false);
       this.toasts.push({
@@ -372,7 +397,7 @@ export class HudScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.resultBanner = this.add
-      .container(360, 620, [plate, this.resultText])
+      .container(TOWER_X + 360, 620, [plate, this.resultText])
       .setDepth(9)
       .setVisible(false);
   }
