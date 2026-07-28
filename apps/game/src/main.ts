@@ -142,8 +142,10 @@ if (viewMode === "operator") {
     connectors.use("mock");
     connectors.mock.startAmbient();
   }
-  applyAccessibility();
+  // Order matters: startRound() clears the command queue, so the accessibility
+  // commands have to be submitted afterwards.
   if (shouldAutoStart()) simulation.startRound();
+  applyAccessibility();
 }
 
 connectors.onStatus((snapshot: ConnectionSnapshot) => {

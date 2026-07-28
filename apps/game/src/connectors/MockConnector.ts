@@ -34,8 +34,6 @@ export class MockConnector extends BaseConnector {
   private rng = new SeededRandom(0x4d4f434b);
 
   connect(): void {
-    if (this.timer !== null) return;
-    this.resetMetrics();
     this.setStatus("connected", "Offline-Testmodus aktiv");
   }
 

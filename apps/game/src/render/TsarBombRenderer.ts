@@ -37,12 +37,14 @@ export class TsarBombRenderer {
     this.overlay = scene.add.graphics().setDepth(60).setVisible(false);
 
     this.vignette = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0x1a0009, 0)
-      .setDepth(59);
+      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0x1a0009, 1)
+      .setDepth(59)
+      .setAlpha(0);
 
     this.alarmBar = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, PALETTE.catastrophe, 0)
+      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, PALETTE.catastrophe, 1)
       .setDepth(58)
+      .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     this.title = scene.add
@@ -108,8 +110,9 @@ export class TsarBombRenderer {
       .setVisible(false);
 
     this.flash = scene.add
-      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0xffffff, 0)
-      .setDepth(72);
+      .rectangle(360, 640, LOGICAL_WIDTH, LOGICAL_HEIGHT, 0xffffff, 1)
+      .setDepth(72)
+      .setAlpha(0);
 
     this.shockwave = scene.add
       .circle(360, 780, 40)

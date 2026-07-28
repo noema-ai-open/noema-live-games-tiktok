@@ -8,6 +8,10 @@ transparent, configurable game actions.
 
 [![Projekt unterstützen](https://img.shields.io/badge/PayPal-Projekt%20unterst%C3%BCtzen-f4b23a?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=swoellner.pay@gmx.de&currency_code=EUR&item_name=NOEMA+Live+Games)
 
+| Stream view (`?view=stream`) | ZAR-BOMBE sequence |
+| --- | --- |
+| <img src="docs/media/stream-view.png" alt="NOEMA Ascent stream view" width="320"> | <img src="docs/media/zar-bombe.png" alt="ZAR-BOMBE warning phase" width="320"> |
+
 ## NOEMA Ascent
 
 The first playable mode. Around 30 autonomous robot workers climb a damaged

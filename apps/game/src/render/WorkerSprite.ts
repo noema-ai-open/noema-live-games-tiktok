@@ -168,9 +168,11 @@ export class WorkerSprite {
     const phase = tick * 0.24 + worker.id * 1.7;
     const protectedNow = worker.state === "protected";
 
-    // Spawn: quick scale-in plus a bright flash on the chest light.
+    // Spawn: quick scale-in plus a bright flash on the chest light. A round
+    // reset reuses this sprite, so the fall rotation is cleared here too.
     if (worker.state === "spawning") {
       this.spawnFlash = 1;
+      this.container.rotation = 0;
     } else if (this.spawnFlash > 0) {
       this.spawnFlash = Math.max(0, this.spawnFlash - 0.06);
     }
