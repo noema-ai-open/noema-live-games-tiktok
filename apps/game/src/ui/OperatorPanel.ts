@@ -553,7 +553,7 @@ export class OperatorPanel {
     );
     this.setText(
       "cooldowns",
-      `ZAR-BOMBE ${Math.ceil(Math.max(0, state.tsarBomb.cooldownUntilTick - state.tick) / TICKS.second)}s · Schild ${Math.ceil(Math.max(0, state.shieldUntilTick - state.tick) / TICKS.second)}s · Lift ${Math.ceil(Math.max(0, state.liftActiveUntilTick - state.tick) / TICKS.second)}s · Umwelt ${state.environmentMode}`,
+      `ZAR-BOMBE ${Math.ceil(Math.max(0, state.tsarBomb.cooldownUntilTick - state.tick) / TICKS.second)}s · Schild ${Math.ceil(Math.max(0, state.shieldUntilTick - state.tick) / TICKS.second)}s · Lift ${Math.ceil(Math.max(0, state.liftOverdriveUntilTick - state.tick) / TICKS.second)}s · Umwelt ${state.environmentMode}`,
     );
     this.setText(
       "dupes",

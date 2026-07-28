@@ -106,12 +106,7 @@ export class HudScene extends Phaser.Scene {
 
     this.updateChips(state.tick);
 
-    const progress =
-      this.simulation.workers.reduce(
-        (total, worker) =>
-          total + (worker.state === "rescued" ? 1 : worker.progress),
-        0,
-      ) / WORKER_COUNT;
+    const progress = this.simulation.getAscentProgress();
     this.progressFill.setScale(1, Phaser.Math.Clamp(progress, 0.01, 1));
 
     this.resultText.setText(this.resultLabel());
@@ -397,11 +392,11 @@ export class HudScene extends Phaser.Scene {
       },
       {
         text:
-          state.liftActiveUntilTick > tick
-            ? `LIFT OVERDRIVE ${Math.ceil((state.liftActiveUntilTick - tick) / TICKS.second)}s`
+          state.liftOverdriveUntilTick > tick
+            ? `LIFT OVERDRIVE ${Math.ceil((state.liftOverdriveUntilTick - tick) / TICKS.second)}s`
             : "LIFT NORMAL",
         color: PALETTE.support,
-        active: state.liftActiveUntilTick > tick,
+        active: state.liftOverdriveUntilTick > tick,
       },
       {
         text: tick % 180 < 44 ? "GEFAHR AKTIV" : "GEFAHR RUHT",

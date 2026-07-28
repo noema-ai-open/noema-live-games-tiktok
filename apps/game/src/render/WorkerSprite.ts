@@ -1,7 +1,10 @@
 import Phaser from "phaser";
-import type { Worker } from "../simulation/types";
-import { PALETTE, ROBOT_ACCENTS, ROBOT_SHELLS } from "./palette";
+import type { Walker } from "../simulation/walker";
+import { PALETTE, ROBOT_ACCENTS, ROBOT_SHELLS, toCss } from "./palette";
 import { TEXTURE_KEYS } from "./textures";
+
+const WARN_COLOR = toCss(PALETTE.warn);
+const DANGER_COLOR = toCss(PALETTE.danger);
 
 export type WorkerRenderContext = {
   reducedMotion: boolean;
@@ -36,9 +39,10 @@ export class WorkerSprite {
   private readonly tool: Phaser.GameObjects.Graphics;
   private readonly alertMark: Phaser.GameObjects.Text;
   private spawnFlash = 1;
+  private alertColor: number = PALETTE.warn;
 
-  constructor(scene: Phaser.Scene, worker: Worker) {
-    this.variant = (worker.id - 1) % ROBOT_ACCENTS.length;
+  constructor(scene: Phaser.Scene, walker: Walker) {
+    this.variant = walker.variant;
     this.accent = ROBOT_ACCENTS[this.variant]!;
     const shell = ROBOT_SHELLS[this.variant]!;
 
@@ -76,12 +80,12 @@ export class WorkerSprite {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontStyle: "bold",
         fontSize: "18px",
-        color: "#ff5c6e",
+        color: WARN_COLOR,
       })
       .setOrigin(0.5)
       .setVisible(false);
 
-    this.container = scene.add.container(worker.x, worker.y, [
+    this.container = scene.add.container(walker.x, walker.y, [
       this.glow,
       this.shield,
       this.shieldRing,
@@ -157,20 +161,20 @@ export class WorkerSprite {
     }
   }
 
-  update(worker: Worker, tick: number, context: WorkerRenderContext): void {
-    const hidden = worker.state === "lost" || worker.state === "rescued";
+  update(walker: Walker, tick: number, context: WorkerRenderContext): void {
+    const hidden = walker.state === "lost" || walker.state === "rescued";
     this.container.setVisible(!hidden);
     if (hidden) return;
 
-    this.container.setPosition(worker.x, worker.y);
+    this.container.setPosition(walker.x, walker.y);
 
     const motion = context.reducedMotion ? 0.35 : 1;
-    const phase = tick * 0.24 + worker.id * 1.7;
-    const protectedNow = worker.state === "protected";
+    const phase = tick * 0.24 + walker.id * 1.7;
+    const protectedNow = walker.protectedUntilTick > tick;
 
     // Spawn: quick scale-in plus a bright flash on the chest light. A round
     // reset reuses this sprite, so the fall rotation is cleared here too.
-    if (worker.state === "spawning") {
+    if (walker.state === "spawning") {
       this.spawnFlash = 1;
       this.container.rotation = 0;
     } else if (this.spawnFlash > 0) {
@@ -188,15 +192,21 @@ export class WorkerSprite {
     }
 
     this.glow.setAlpha(
-      protectedNow ? 0.5 : worker.state === "falling" ? 0.55 : 0.28,
+      protectedNow ? 0.5 : walker.state === "falling" ? 0.55 : 0.28,
     );
     this.glow.setTint(
-      worker.state === "falling" ? PALETTE.danger : this.accent,
+      walker.state === "falling" ? PALETTE.danger : this.accent,
     );
 
-    switch (worker.state) {
+    this.head.setPosition(0, 0);
+    this.head.rotation = 0;
+    this.eyeLeft.y = -13;
+    this.eyeRight.y = -13;
+    this.alertMark.setScale(1);
+
+    switch (walker.state) {
       case "walking":
-      case "protected": {
+      case "traversing": {
         const step = Math.sin(phase) * 4 * motion;
         this.legLeft.y = 14 + Math.max(0, step);
         this.legRight.y = 14 + Math.max(0, -step);
@@ -207,25 +217,46 @@ export class WorkerSprite {
         this.alertMark.setVisible(false);
         break;
       }
-      case "blocked": {
-        // Waiting/blocked: crouch, arms up, alert mark.
-        this.legLeft.y = 15;
-        this.legRight.y = 15;
-        this.armLeft.rotation = -0.9;
-        this.armRight.rotation = 0.9;
+      case "waiting": {
+        const waitingPhase = tick * 0.07 + walker.id * 0.9;
+        const lookCycle = (tick + walker.id * 29) % 210;
+        const lookUp =
+          lookCycle >= 154 && lookCycle < 190
+            ? Math.sin(((lookCycle - 154) / 36) * Math.PI)
+            : 0;
+        const bob = Math.sin(waitingPhase) * 1.6 * motion;
+
+        this.container.y = walker.y + bob;
+        this.legLeft.y = 14;
+        this.legRight.y = 14;
+        this.armLeft.rotation = 0;
+        this.armRight.rotation = 0;
         this.container.rotation = 0;
-        this.container.setScale(spawnScale * 1.04, spawnScale * 0.86);
+        this.container.setScale(spawnScale);
+        this.head.y = -lookUp * 1.5 * motion;
+        this.head.rotation = walker.direction * lookUp * 0.1 * motion;
+        this.eyeLeft.y = -13 - lookUp * 2 * motion;
+        this.eyeRight.y = -13 - lookUp * 2 * motion;
         this.alertMark.setVisible(true);
-        this.alertMark.setAlpha(0.5 + Math.sin(tick * 0.3) * 0.5);
+        if (this.alertColor !== PALETTE.warn) {
+          this.alertMark.setColor(WARN_COLOR);
+          this.alertColor = PALETTE.warn;
+        }
+        this.alertMark.setAlpha(
+          0.72 + Math.sin(waitingPhase * 0.7) * 0.22 * motion,
+        );
+        this.alertMark.setScale(
+          1 + Math.sin(waitingPhase * 0.7) * 0.08 * motion,
+        );
         break;
       }
-      case "jumping": {
-        this.legLeft.y = 12;
-        this.legRight.y = 12;
-        this.armLeft.rotation = -1.5;
-        this.armRight.rotation = 1.5;
-        this.container.rotation = 0;
-        this.container.setScale(spawnScale * 0.9, spawnScale * 1.14);
+      case "riding": {
+        this.legLeft.y = 14;
+        this.legRight.y = 14;
+        this.armLeft.rotation = 0;
+        this.armRight.rotation = 0;
+        this.container.rotation = Math.sin(phase * 0.35) * 0.025 * motion;
+        this.container.setScale(spawnScale);
         this.alertMark.setVisible(false);
         break;
       }
@@ -237,10 +268,18 @@ export class WorkerSprite {
         this.container.rotation += context.reducedMotion ? 0.04 : 0.14;
         this.container.setScale(spawnScale);
         this.alertMark.setVisible(true);
+        if (this.alertColor !== PALETTE.danger) {
+          this.alertMark.setColor(DANGER_COLOR);
+          this.alertColor = PALETTE.danger;
+        }
         this.alertMark.setAlpha(1);
         break;
       }
       case "spawning": {
+        this.legLeft.y = 14;
+        this.legRight.y = 14;
+        this.armLeft.rotation = 0;
+        this.armRight.rotation = 0;
         this.container.setScale(spawnScale);
         this.container.rotation = 0;
         this.alertMark.setVisible(false);
@@ -251,14 +290,14 @@ export class WorkerSprite {
     }
 
     // Blink, and a startled wide-eye while a catastrophe warning runs.
-    const blink = (tick + worker.id * 9) % 104 < 4;
-    const startled = context.alarm && worker.state !== "falling";
+    const blink = (tick + walker.id * 9) % 104 < 4;
+    const startled = context.alarm && walker.state !== "falling";
     const eyeScale = blink ? 0.18 : startled ? 1.35 : 1;
     this.eyeLeft.setScale(eyeScale);
     this.eyeRight.setScale(eyeScale);
     const eyeColor = startled
       ? PALETTE.danger
-      : worker.state === "falling"
+      : walker.state === "falling"
         ? PALETTE.danger
         : 0xffffff;
     this.eyeLeft.setFillStyle(eyeColor, 1);

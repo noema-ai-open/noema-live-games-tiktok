@@ -1,137 +1,167 @@
 import { describe, expect, it } from "vitest";
-import { TICKS } from "../src/config/gameConfig";
+import { TICKS, WORKER_COUNT } from "../src/config/gameConfig";
+import { LEVEL_GRAPH } from "../src/config/levelGraph";
 import { Simulation } from "../src/simulation/Simulation";
 
-const apply = (simulation: Simulation): void => simulation.step();
+/** Alle Uebergaenge, die Aufbau brauchen und gerade offen sind. */
+function openBuildables(simulation: Simulation): number {
+  return simulation.level
+    .renderState(simulation.state.tick)
+    .links.filter((link) => link.buildRequired > 0 && link.open).length;
+}
 
 describe("Simulation", () => {
-  it("transitions a worker from spawning to walking and falling at the pit", () => {
+  it("laesst die Roboter starten und laufen", () => {
     const simulation = new Simulation(7);
     simulation.startRound();
-    const worker = simulation.workers[0]!;
-    apply(simulation);
-    expect(worker.state).toBe("walking");
-    worker.progress = 0.21;
-    worker.state = "walking";
-    apply(simulation);
-    expect(worker.state).toBe("falling");
+    for (let index = 0; index < 60; index += 1) simulation.step();
+    const first = simulation.workers[0]!;
+    expect(first.state).not.toBe("spawning");
+    expect(simulation.getActiveCount()).toBe(WORKER_COUNT);
   });
 
-  it("builds the bridge through an ordered command", () => {
+  it("staut die Roboter vor einem gesperrten Uebergang", () => {
     const simulation = new Simulation(8);
     simulation.startRound();
-    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
-    apply(simulation);
-    expect(
-      simulation.state.structures.find(
-        (structure) => structure.id === "bridge-alpha",
-      )?.intact,
-    ).toBe(true);
-    expect(simulation.commandHistory[0]?.sequence).toBe(1);
+    for (let index = 0; index < 900; index += 1) simulation.step();
+    const waiting = simulation.workers.filter(
+      (worker) => worker.state === "waiting",
+    );
+    expect(waiting.length).toBeGreaterThan(0);
+    expect(simulation.getHotspot()?.waiting).toBeGreaterThan(0);
   });
 
-  it("applies a group shield to active workers", () => {
+  it("schaltet mit einem Geschenk einen Uebergang frei", () => {
     const simulation = new Simulation(9);
+    simulation.startRound();
+    for (let index = 0; index < 600; index += 1) simulation.step();
+    expect(openBuildables(simulation)).toBe(0);
+
+    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
+    simulation.step();
+    expect(openBuildables(simulation)).toBe(1);
+  });
+
+  it("baut dort, wo die meisten warten", () => {
+    const simulation = new Simulation(10);
+    simulation.startRound();
+    for (let index = 0; index < 900; index += 1) simulation.step();
+    const hotspot = simulation.getHotspot();
+    expect(hotspot).not.toBeNull();
+
+    simulation.submit({ type: "repair_structure", amount: 999 });
+    simulation.step();
+    const state = simulation.level.renderState(simulation.state.tick);
+    expect(state.links.find((link) => link.id === hotspot!.link.id)?.open).toBe(
+      true,
+    );
+  });
+
+  it("laedt Teamenergie und schaltet bei 100 selbst frei", () => {
+    const simulation = new Simulation(11);
+    simulation.startRound();
+    for (let index = 0; index < 600; index += 1) simulation.step();
+    for (let index = 0; index < 10; index += 1) {
+      simulation.submit({ type: "add_team_energy", amount: 12 });
+      simulation.step();
+    }
+    expect(openBuildables(simulation)).toBeGreaterThan(0);
+    expect(simulation.state.teamEnergy).toBeLessThan(100);
+  });
+
+  it("schuetzt alle Roboter mit dem Team-Schild", () => {
+    const simulation = new Simulation(12);
     simulation.startRound();
     simulation.submit({
       type: "group_shield",
       durationTicks: TICKS.second * 10,
     });
-    apply(simulation);
+    simulation.step();
     expect(
       simulation.workers.every(
-        (worker) =>
-          worker.state === "protected" || worker.state === "spawning",
+        (worker) => worker.protectedUntilTick > simulation.state.tick,
       ),
     ).toBe(true);
-    expect(simulation.workers[0]!.protectedUntilTick).toBeGreaterThan(
-      simulation.state.tick,
-    );
   });
 
-  it("collapses a selected temporary route section", () => {
-    const simulation = new Simulation(10);
+  it("blockiert zerstoerende Befehle im Safe Mode", () => {
+    const simulation = new Simulation(13);
     simulation.startRound();
-    simulation.submit({
-      type: "collapse_section",
-      sectionId: "shortcut-deck",
-    });
-    apply(simulation);
-    expect(
-      simulation.state.structures.find(
-        (structure) => structure.id === "shortcut-deck",
-      )?.intact,
-    ).toBe(false);
-  });
-
-  it("blocks destructive commands in safe mode", () => {
-    const simulation = new Simulation(11);
-    simulation.startRound();
+    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
     simulation.submit({ type: "set_safe_mode", enabled: true });
-    simulation.submit({
-      type: "collapse_section",
-      sectionId: "shortcut-deck",
-    });
-    apply(simulation);
-    expect(
-      simulation.state.structures.find(
-        (structure) => structure.id === "shortcut-deck",
-      )?.intact,
-    ).toBe(true);
+    simulation.step();
+    const before = openBuildables(simulation);
+
+    simulation.submit({ type: "collapse_section" });
+    simulation.step();
+    expect(openBuildables(simulation)).toBe(before);
   });
 
-  it("enforces the ZAR-BOMBE cooldown", () => {
-    const simulation = new Simulation(12);
+  it("zerstoert einen gebauten Uebergang durch Sabotage", () => {
+    const simulation = new Simulation(14);
+    simulation.startRound();
+    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
+    simulation.step();
+    expect(openBuildables(simulation)).toBe(1);
+
+    simulation.submit({ type: "collapse_section" });
+    simulation.step();
+    expect(openBuildables(simulation)).toBe(0);
+  });
+
+  it("haelt die ZAR-BOMBE-Abklingzeit ein", () => {
+    const simulation = new Simulation(15);
     simulation.startRound();
     simulation.submit({ type: "tsar_bomb" });
-    apply(simulation);
+    simulation.step();
     const firstStart = simulation.state.tsarBomb.startedTick;
     simulation.submit({ type: "tsar_bomb" });
-    apply(simulation);
+    simulation.step();
     expect(simulation.state.tsarBomb.startedTick).toBe(firstStart);
-    expect(simulation.state.tsarBomb.cooldownUntilTick).toBeGreaterThan(
-      simulation.state.tick,
-    );
   });
 
-  it("keeps protected workers safe during ZAR-BOMBE impact", () => {
-    const simulation = new Simulation(13);
+  it("laesst geschuetzte Roboter den Einschlag ueberstehen", () => {
+    const simulation = new Simulation(16);
     simulation.startRound();
     simulation.submit({
       type: "group_shield",
-      durationTicks: TICKS.second * 20,
+      durationTicks: TICKS.second * 60,
     });
     simulation.submit({ type: "tsar_bomb" });
-    apply(simulation);
-    const protectedIds = simulation.workers.map((worker) => worker.id);
-    for (let index = 0; index < TICKS.tsarWarning + TICKS.tsarDescent; index += 1) {
-      apply(simulation);
+    simulation.step();
+    for (
+      let index = 0;
+      index < TICKS.tsarWarning + TICKS.tsarDescent + 2;
+      index += 1
+    ) {
+      simulation.step();
     }
     expect(simulation.state.tsarBomb.impactApplied).toBe(true);
     expect(
-      simulation.workers
-        .filter((worker) => protectedIds.includes(worker.id))
-        .every(
-          (worker) => worker.state !== "falling" && worker.state !== "lost",
-        ),
+      simulation.workers.every((worker) => worker.state !== "falling"),
     ).toBe(true);
   });
 
-  it("resets all round state without changing the seed", () => {
-    const simulation = new Simulation(14);
+  it("setzt die Runde zurueck, ohne den Seed zu aendern", () => {
+    const simulation = new Simulation(17);
     simulation.startRound();
-    for (let index = 0; index < 20; index += 1) apply(simulation);
-    simulation.submit({ type: "add_team_energy", amount: 50 });
-    apply(simulation);
+    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
+    for (let index = 0; index < 100; index += 1) simulation.step();
+
     simulation.submit({ type: "reset" });
-    apply(simulation);
+    simulation.step();
     expect(simulation.state.tick).toBe(0);
-    expect(simulation.state.seed).toBe(14);
-    expect(simulation.state.teamEnergy).toBe(15);
-    expect(simulation.state.roundStatus).toBe("ready");
+    expect(simulation.state.seed).toBe(17);
     expect(simulation.commandHistory).toHaveLength(0);
+    expect(openBuildables(simulation)).toBe(0);
     expect(
       simulation.workers.every((worker) => worker.state === "spawning"),
     ).toBe(true);
+  });
+
+  it("kennt jeden Uebergang aus dem Levelgraphen", () => {
+    const simulation = new Simulation(18);
+    const state = simulation.level.renderState(0);
+    expect(state.links).toHaveLength(LEVEL_GRAPH.links.length);
   });
 });

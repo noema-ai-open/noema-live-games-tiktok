@@ -1,44 +1,13 @@
 import type { OrderedGameCommand, ViewerIdentity } from "@noema/event-protocol";
+import type { Walker, WalkerState } from "./walker";
 
-export type WorkerState =
-  | "spawning"
-  | "walking"
-  | "falling"
-  | "jumping"
-  | "blocked"
-  | "protected"
-  | "rescued"
-  | "lost";
+export type { Walker, WalkerState };
+/** Alte Namen, damit bestehende Aufrufer lesbar bleiben. */
+export type Worker = Walker;
+export type WorkerState = WalkerState;
 
-export type RouteKind = "safe" | "risky";
 export type RoundStatus = "ready" | "running" | "paused" | "success" | "failure";
 export type TsarPhase = "idle" | "warning" | "descending" | "impact" | "recovery";
-
-export type Worker = {
-  id: number;
-  state: WorkerState;
-  route: RouteKind;
-  x: number;
-  y: number;
-  progress: number;
-  speed: number;
-  direction: -1 | 1;
-  spawnTick: number;
-  velocityY: number;
-  stateUntilTick: number;
-  protectedUntilTick: number;
-  lastCheckpoint: 0 | 1 | 2;
-  lastHazardCycle: number;
-  lateralOffset: number;
-};
-
-export type TemporaryStructure = {
-  id: string;
-  kind: "bridge" | "route" | "jump-field" | "blocker";
-  intact: boolean;
-  health: number;
-  temporary: true;
-};
 
 export type TsarBombState = {
   phase: TsarPhase;
@@ -55,20 +24,19 @@ export type SimulationState = {
   tick: number;
   remainingTicks: number;
   roundStatus: RoundStatus;
+  /** Laedt sich durch Likes, Follows und Shares und schaltet dann selbst frei. */
   teamEnergy: number;
   rescuedCount: number;
   lostCount: number;
   safeMode: boolean;
   reducedMotion: boolean;
-  liftActiveUntilTick: number;
+  /** Solange gesetzt, faehrt der Lift doppelt so schnell. */
+  liftOverdriveUntilTick: number;
   shieldUntilTick: number;
-  blockerUntilTick: number;
-  jumpFieldUntilTick: number;
   environmentUntilTick: number;
   environmentMode: "none" | "wind" | "low_gravity";
   recoveryMultiplier: number;
   tsarBomb: TsarBombState;
-  structures: TemporaryStructure[];
   eventFeed: string[];
 };
 

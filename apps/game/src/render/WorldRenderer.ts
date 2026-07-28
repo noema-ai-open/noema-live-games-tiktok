@@ -1,8 +1,7 @@
 import Phaser from "phaser";
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from "../config/gameConfig";
-import { PLATFORM_LEVELS, RISKY_PATH, SAFE_PATH } from "../config/level";
 import { SeededRandom } from "../simulation/rng";
-import { PALETTE, toCss } from "./palette";
+import { PALETTE } from "./palette";
 import { TEXTURE_KEYS } from "./textures";
 
 type Layer = {
@@ -12,9 +11,9 @@ type Layer = {
 };
 
 /**
- * Builds the static world: sky, distant skyline, the megastructure itself,
- * decks, routes, zones and atmosphere. Nothing here reads simulation state
- * except the parallax offset handed in by the scene.
+ * Builds the static world background: sky, distant skyline, the megastructure
+ * itself and atmosphere. Nothing here reads simulation state except the
+ * parallax offset handed in by the scene.
  */
 export class WorldRenderer {
   private readonly layers: Layer[] = [];
@@ -28,10 +27,6 @@ export class WorldRenderer {
     this.buildSky();
     this.buildSkyline();
     this.buildTower();
-    this.buildRoutes();
-    this.buildDecks();
-    this.buildZones();
-    this.buildExit();
     this.energyLines = scene.add.graphics().setDepth(6);
     this.buildAtmosphere();
   }
@@ -167,136 +162,6 @@ export class WorldRenderer {
       pipes.fillStyle(PALETTE.energy, 0.16);
       pipes.fillRoundedRect(x - 3, 110, 6, 1050, 3);
     }
-  }
-
-  private buildRoutes(): void {
-    this.strokeRoute(SAFE_PATH, PALETTE.energy, 0.3, 14);
-    this.strokeRoute(SAFE_PATH, PALETTE.energySoft, 0.55, 4);
-    this.strokeRoute(RISKY_PATH, PALETTE.warn, 0.24, 12);
-    this.strokeRoute(RISKY_PATH, PALETTE.danger, 0.45, 3);
-  }
-
-  private strokeRoute(
-    path: readonly { x: number; y: number }[],
-    color: number,
-    alpha: number,
-    width: number,
-  ): void {
-    const graphics = this.scene.add.graphics().setDepth(2);
-    graphics.lineStyle(width, color, alpha);
-    graphics.beginPath();
-    graphics.moveTo(path[0]!.x, path[0]!.y);
-    for (const point of path.slice(1)) graphics.lineTo(point.x, point.y);
-    graphics.strokePath();
-  }
-
-  private buildDecks(): void {
-    for (const platform of PLATFORM_LEVELS) {
-      const graphics = this.scene.add.graphics().setDepth(4);
-      // Under-deck shadow gives the platform physical thickness.
-      graphics.fillStyle(0x000000, 0.35);
-      graphics.fillRoundedRect(platform.x + 4, platform.y + 8, platform.width, 18, 6);
-      graphics.fillStyle(PALETTE.deckFill, 1);
-      graphics.fillRoundedRect(platform.x, platform.y, platform.width, 20, 6);
-      graphics.fillStyle(PALETTE.deckTop, 1);
-      graphics.fillRoundedRect(platform.x, platform.y, platform.width, 7, 3);
-      graphics.lineStyle(3, platform.color, 0.9);
-      graphics.strokeRoundedRect(platform.x, platform.y, platform.width, 20, 6);
-
-      // Grating pattern.
-      graphics.lineStyle(1, platform.color, 0.28);
-      for (let x = platform.x + 10; x < platform.x + platform.width - 8; x += 16) {
-        graphics.lineBetween(x, platform.y + 9, x, platform.y + 18);
-      }
-
-      // Edge light strip, the main readability cue on a phone.
-      const strip = this.scene.add
-        .rectangle(
-          platform.x + platform.width / 2,
-          platform.y - 1,
-          platform.width - 6,
-          3,
-          platform.color,
-          0.85,
-        )
-        .setDepth(5);
-      strip.setBlendMode(Phaser.BlendModes.ADD);
-    }
-  }
-
-  private buildZones(): void {
-    this.zoneMarker("ZONE 1", "FUNDAMENT", 96, 900, PALETTE.warn);
-    this.zoneMarker("ZONE 2", "KERN", 406, 656, PALETTE.energy);
-    this.zoneMarker("ZONE 3", "LIFT", 96, 400, PALETTE.support);
-  }
-
-  private zoneMarker(
-    title: string,
-    subtitle: string,
-    x: number,
-    y: number,
-    color: number,
-  ): void {
-    const graphics = this.scene.add.graphics().setDepth(8);
-    graphics.fillStyle(0x03080f, 0.82);
-    graphics.fillRoundedRect(x, y, 170, 52, 10);
-    graphics.lineStyle(2, color, 0.7);
-    graphics.strokeRoundedRect(x, y, 170, 52, 10);
-    graphics.fillStyle(color, 0.9);
-    graphics.fillRoundedRect(x, y, 6, 52, 3);
-
-    this.scene.add
-      .text(x + 18, y + 9, title, {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontStyle: "bold",
-        fontSize: "16px",
-        color: toCss(color),
-      })
-      .setDepth(9);
-    this.scene.add
-      .text(x + 18, y + 29, subtitle, {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "13px",
-        color: PALETTE.textDim,
-      })
-      .setDepth(9);
-  }
-
-  private buildExit(): void {
-    const graphics = this.scene.add.graphics().setDepth(8);
-    graphics.fillStyle(0x062b24, 0.96);
-    graphics.fillRoundedRect(248, 104, 224, 88, 14);
-    graphics.lineStyle(4, PALETTE.support, 0.95);
-    graphics.strokeRoundedRect(248, 104, 224, 88, 14);
-    graphics.fillStyle(PALETTE.support, 0.16);
-    graphics.fillRoundedRect(262, 118, 196, 60, 10);
-
-    this.scene.add
-      .text(360, 114, "EXIT", {
-        fontFamily: "Inter, Arial Black, sans-serif",
-        fontStyle: "bold",
-        fontSize: "34px",
-        color: toCss(PALETTE.support),
-      })
-      .setOrigin(0.5, 0)
-      .setDepth(9);
-    this.scene.add
-      .text(360, 156, "AUSSTIEG  ↑", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontStyle: "bold",
-        fontSize: "15px",
-        color: PALETTE.text,
-      })
-      .setOrigin(0.5, 0)
-      .setDepth(9);
-
-    const halo = this.scene.add
-      .image(360, 148, TEXTURE_KEYS.glow)
-      .setDisplaySize(300, 150)
-      .setTint(PALETTE.support)
-      .setAlpha(0.22)
-      .setDepth(7);
-    halo.setBlendMode(Phaser.BlendModes.ADD);
   }
 
   private buildAtmosphere(): void {

@@ -6,16 +6,17 @@ describe("ReplayService", () => {
   it("reproduces the same deterministic final result", () => {
     const simulation = new Simulation(20260727);
     simulation.startRound();
-    simulation.submit({ type: "add_team_energy", amount: 12 });
-    simulation.submit({ type: "build_bridge", zoneId: "zone-1" });
-    simulation.step();
-    for (let index = 0; index < 140; index += 1) simulation.step();
-    simulation.submit({
-      type: "place_jump_field",
-      zoneId: "zone-1",
-      durationTicks: 240,
-    });
-    while (simulation.state.roundStatus === "running") simulation.step();
+    // Eine aktive Zuschauerschaft nachstellen: regelmaessig Aufbau schicken,
+    // damit die Uebergaenge aufgehen und Roboter oben ankommen.
+    while (simulation.state.roundStatus === "running") {
+      if (simulation.state.tick % 120 === 0) {
+        simulation.submit({ type: "repair_structure", amount: 20 });
+      }
+      if (simulation.state.tick % 900 === 300) {
+        simulation.submit({ type: "activate_lift", durationTicks: 600 });
+      }
+      simulation.step();
+    }
 
     const replayService = new ReplayService();
     const replay = replayService.capture(simulation);

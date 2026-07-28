@@ -38,10 +38,11 @@ describe("live session", () => {
     live.dispatch();
     simulation.step();
 
-    expect(
-      simulation.state.structures.find((item) => item.id === "bridge-alpha")
-        ?.intact,
-    ).toBe(true);
+    // Der Befehl schaltet einen Uebergang frei, der Aufbau braucht.
+    const opened = simulation.level
+      .renderState(simulation.state.tick)
+      .links.filter((link) => link.buildRequired > 0 && link.open);
+    expect(opened.length).toBeGreaterThan(0);
     expect(simulation.commandHistory).toHaveLength(1);
     expect(simulation.commandHistory[0]?.command.type).toBe("build_bridge");
   });
