@@ -2,7 +2,8 @@ export const LOGICAL_WIDTH = 720;
 export const LOGICAL_HEIGHT = 1280;
 export const FIXED_HZ = 30;
 export const FIXED_STEP_MS = 1000 / FIXED_HZ;
-export const ROUND_DURATION_TICKS = FIXED_HZ * 240;
+/** Eine Runde laeuft 20 Minuten — lang genug fuer einen echten Stream. */
+export const ROUND_DURATION_TICKS = FIXED_HZ * 1200;
 export const WORKER_COUNT = 30;
 export const RESCUE_TARGET = 21;
 export const LEVEL_VERSION = "ascent-tower-v1";

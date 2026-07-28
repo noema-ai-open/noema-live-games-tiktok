@@ -129,7 +129,9 @@ export class Simulation {
   private createWorkers(): Worker[] {
     return Array.from({ length: WORKER_COUNT }, (_, index) => {
       const route = index % 5 === 0 ? "risky" : "safe";
-      return createWorker(index + 1, route, 0.00115 + this.rng.next() * 0.0002);
+      // Langsamer als im Prototyp: Ein Roboter braucht knapp zwei Minuten nach
+      // oben, damit Geschenke ueberhaupt Zeit haben zu wirken.
+      return createWorker(index + 1, route, 0.0004 + this.rng.next() * 0.00004);
     });
   }
 

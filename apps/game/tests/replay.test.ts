@@ -21,7 +21,9 @@ describe("ReplayService", () => {
     const replay = replayService.capture(simulation);
     const comparison = replayService.replay(replay);
 
-    expect(replay.expectedResult.rescued).toBe(30);
+    // Dieser Test prueft Determinismus, nicht die Balance: Die Zahl der
+    // Geretteten haengt am Tempo und darf sich beim Ausbalancieren aendern.
+    expect(replay.expectedResult.rescued).toBeGreaterThan(0);
     expect(comparison.matches).toBe(true);
     expect(comparison.result).toEqual(replay.expectedResult);
   });
