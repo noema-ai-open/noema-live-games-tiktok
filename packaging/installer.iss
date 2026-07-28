@@ -42,10 +42,10 @@ Source: "LIESMICH.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 
 [Icons]
 Name: "{group}\NOEMA-AI Ascent"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
-  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
+  Parameters: "-NoExit -NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
   WorkingDir: "{app}"; Comment: "Startet NOEMA-AI Ascent und oeffnet die Steuerung"
 Name: "{autodesktop}\NOEMA-AI Ascent"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
-  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
+  Parameters: "-NoExit -NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
   WorkingDir: "{app}"; Comment: "Startet NOEMA-AI Ascent und oeffnet die Steuerung"; \
   Tasks: desktopicon
 Name: "{group}\NOEMA-AI Ascent deinstallieren"; Filename: "{uninstallexe}"
@@ -56,6 +56,6 @@ Name: "desktopicon"; Description: "Verknuepfung auf dem Desktop anlegen"; \
 
 [Run]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
-  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
+  Parameters: "-NoExit -NoProfile -ExecutionPolicy Bypass -File ""{app}\serve.ps1"" -View operator"; \
   WorkingDir: "{app}"; Description: "NOEMA-AI Ascent jetzt starten"; \
   Flags: nowait postinstall skipifsilent

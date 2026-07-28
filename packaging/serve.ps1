@@ -32,13 +32,22 @@
 [CmdletBinding()]
 param(
   [int]$Port = 4173,
-  [string]$Root = (Join-Path $PSScriptRoot "app"),
+  [string]$Root = "",
   [ValidateSet("operator", "stream", "none")]
   [string]$View = "operator",
   [switch]$NoBrowser
 )
 
 $ErrorActionPreference = "Stop"
+
+# $PSScriptRoot ist unter Windows PowerShell 5.1 in einem param()-Standardwert
+# noch leer, deshalb wird der Ordner erst hier bestimmt.
+if ([string]::IsNullOrWhiteSpace($Root)) {
+  $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
+  if ([string]::IsNullOrWhiteSpace($scriptDirectory)) { $scriptDirectory = $PSScriptRoot }
+  if ([string]::IsNullOrWhiteSpace($scriptDirectory)) { $scriptDirectory = (Get-Location).Path }
+  $Root = Join-Path $scriptDirectory "app"
+}
 
 # --- Protokoll -------------------------------------------------------------
 # Damit ein Fehlstart nachvollziehbar bleibt, auch wenn das Fenster zugeht.

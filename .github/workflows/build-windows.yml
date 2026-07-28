@@ -67,12 +67,20 @@ jobs:
             throw "Rauchtest laeuft nicht unter Windows PowerShell 5.1."
           }
 
-          # Der Installer bringt keine Laufzeitumgebung mit, deshalb muss der
-          # HttpListener-Server hier gegen die echten Build-Dateien laufen.
+          # Genau so aufbauen, wie der Installer es ablegt: serve.ps1 mit einem
+          # Unterordner "app" daneben. Der Aufruf laesst -Root bewusst weg,
+          # damit der Standardwert mitgetestet wird — der Fehler, der sonst
+          # erst auf dem Zielrechner auffaellt.
+          $stage = Join-Path $env:TEMP "ascent-stage"
+          Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "$stage\app" -Force | Out-Null
+          Copy-Item "apps/game/dist/*" "$stage\app" -Recurse -Force
+          Copy-Item "packaging/serve.ps1" "$stage\serve.ps1" -Force
+
           $job = Start-Job -ScriptBlock {
-            param($script, $root)
-            & $script -Root $root -Port 4399 -NoBrowser -View none
-          } -ArgumentList "$PWD/packaging/serve.ps1", "$PWD/apps/game/dist"
+            param($script)
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Port 4399 -NoBrowser -View none 2>&1
+          } -ArgumentList "$stage\serve.ps1"
 
           $ready = $false
           foreach ($attempt in 1..20) {
@@ -92,7 +100,7 @@ jobs:
           }
 
           # Ein Asset muss ebenfalls mit korrektem Content-Type kommen.
-          $asset = Get-ChildItem "apps/game/dist/assets" -Filter "*.js" | Select-Object -First 1
+          $asset = Get-ChildItem "$stage\app\assets" -Filter "*.js" | Select-Object -First 1
           $assetResponse = Invoke-WebRequest "http://localhost:4399/assets/$($asset.Name)" -UseBasicParsing -TimeoutSec 5
           if ($assetResponse.Headers["Content-Type"] -notmatch "javascript") {
             throw "Falscher Content-Type fuer $($asset.Name): $($assetResponse.Headers["Content-Type"])"
