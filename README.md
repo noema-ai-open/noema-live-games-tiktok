@@ -6,7 +6,7 @@ This public repository contains the game runtime, the local operator panel, the
 event protocol and the connectors that turn TikTok LIVE events into
 transparent, configurable game actions.
 
-[![Windows-Installer](https://img.shields.io/badge/Windows-Setup%20herunterladen-0078D4?logo=windows)](https://github.com/noema-ai-open/noema-live-games-tiktok/releases/latest)
+[![Windows-Installer](https://img.shields.io/badge/Windows-Setup%20herunterladen-0078D4?logo=windows)](https://github.com/noema-ai-open/noema-live-games-tiktok/releases)
 [![Projekt unterstützen](https://img.shields.io/badge/PayPal-Projekt%20unterst%C3%BCtzen-f4b23a?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=swoellner.pay@gmx.de&currency_code=EUR&item_name=NOEMA+Live+Games)
 
 | Stream view (`?view=stream`) | ZAR-BOMBE sequence |
@@ -25,8 +25,10 @@ out. The premium spectacle is the `ZAR-BOMBE`.
 ### Windows (installer)
 
 Download the installer from the
-[releases page](https://github.com/noema-ai-open/noema-live-games-tiktok/releases/latest)
-and run it. The package contains the built game and a small local web server
+[releases page](https://github.com/noema-ai-open/noema-live-games-tiktok/releases)
+and run it. Current build:
+[`NOEMA-AI-Ascent-Setup-v0.2.0.exe`](https://github.com/noema-ai-open/noema-live-games-tiktok/releases/download/v0.2.0/NOEMA-AI-Ascent-Setup-v0.2.0.exe)
+(pre-release — the branch is not merged yet). The package contains the built game and a small local web server
 based on Windows' own `System.Net.HttpListener` — no Node.js, no Python, no
 runtime download.
 
