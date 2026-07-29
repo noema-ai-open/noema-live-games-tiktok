@@ -14,15 +14,28 @@ scrollt seitlich innerhalb dieses Blocks.
 Die handgebaute Kampagne enthält:
 
 1. **DER WEG ZUM HIMMELSLEUCHTFEUER** – Tal, Wald, Ruinen und Gipfeltor
-2. **DIE NEONHÖHLEN** – Kristallhöhlen und verlassene Maschinen
-3. **DER STURMPASS** – Gewitterpfad, Himmelsruinen und finales Leuchtfeuer
+2. **DIE KRISTALLHÖHLEN** – Kristallhöhlen und verlassene Maschinen
+3. **DER STURMGIPFEL** – Gewitterpfad, Himmelsruinen und finales Leuchtfeuer
 
-Jedes Level besitzt Sprünge, Bauteile, Chatabzweigung, Schlucht, Checkpoints
-und Helfertor. Am Levelende läuft eine eigene Feuerwerksanimation. Danach
-beginnt automatisch das nächste Level mit einer frischen Zeit von 4:30.
+Jedes Level besitzt mindestens elf Segmente (Sprünge, Bauteile,
+Chatabzweigung, Schlucht, Checkpoints, Helfertor) mit eigener Farbpalette und
+eigenen Landmarken je Region. Am Levelende läuft eine eigene, regionsabhängige
+Feuerwerksanimation mit Leuchtfeuer-Lichtstrahl; das Finale von Level 3 fällt
+deutlich größer aus. Jedes Level startet mit einer eigenen, frischen Zeit von
+4:30 – ein Levelwechsel verbraucht nie die Zeit des nächsten Levels.
 
 Nach dem dritten Level bleibt der Kampagnenerfolg 12 Sekunden, ein Fehlschlag
 8 Sekunden sichtbar; der Automodus startet anschließend eine neue Seed-Runde.
+
+### NURI-Sprechblase
+
+Wartet NURI mindestens drei Sekunden unbeantwortet vor einem Hindernis
+(`heroState === "blocked"`), erscheint über der Figur eine Sprechblase mit
+„Help me, please!“. Sie verschwindet sofort, sobald eine Aktion beginnt, und
+erscheint frühestens zwölf Sekunden nach dem letzten Verschwinden erneut. Die
+Logik steckt deterministisch in `AdventureSimulation` (`state.speechBubble`),
+die Darstellung in `apps/game/src/render/HeroSpeechBubble.ts` – vorbereitet
+für weitere Sätze, ohne den bestehenden State-Machine-Fluss zu verändern.
 
 ## Geschenkaktionen
 
