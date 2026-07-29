@@ -23,6 +23,12 @@ export type SimulationState = {
   remainingTicks: number;
   roundStatus: RoundStatus;
   heroState: HeroGameState;
+  speechBubble: {
+    visible: boolean;
+    text: string;
+    blockedSinceTick: number | null;
+    lastShownUntilTick: number | null;
+  };
   segmentId: string;
   levelIndex: number;
   levelCount: number;

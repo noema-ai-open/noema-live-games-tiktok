@@ -201,6 +201,12 @@ export class AdventureSimulation {
       remainingTicks: ROUND_DURATION_TICKS,
       roundStatus: "ready",
       heroState: "intro",
+      speechBubble: {
+        visible: false,
+        text: "",
+        blockedSinceTick: null,
+        lastShownUntilTick: null,
+      },
       segmentId: "station-intro",
       levelIndex: 0,
       levelCount: this.levels.length,
@@ -600,6 +606,12 @@ export class AdventureSimulation {
     this.state.levelIndex = this.levelIndex;
     this.state.levelCount = this.levels.length;
     this.state.remainingTicks = ROUND_DURATION_TICKS;
+    this.state.speechBubble = {
+      visible: false,
+      text: "",
+      blockedSinceTick: null,
+      lastShownUntilTick: null,
+    };
     this.state.checkpointCount = 0;
     this.state.chosenRoute = null;
     this.state.levelCelebration = {
@@ -649,11 +661,35 @@ export class AdventureSimulation {
 
   private syncState(): void {
     this.state.heroState = this.hero.state;
+    this.updateSpeechBubble();
     this.state.segmentId = this.director.current.id;
     this.state.levelIndex = this.levelIndex;
     this.state.levelCount = this.levels.length;
     this.state.chosenRoute = this.director.chosenRoute;
     this.state.checkpointCount = this.checkpoints.reached;
+  }
+
+  private updateSpeechBubble(): void {
+    const bubble = this.state.speechBubble;
+    if (this.state.heroState !== "blocked") {
+      bubble.blockedSinceTick = null;
+      if (bubble.visible) {
+        bubble.lastShownUntilTick = this.state.tick;
+        bubble.visible = false;
+      }
+      return;
+    }
+
+    bubble.blockedSinceTick ??= this.state.tick;
+    const delayElapsed =
+      this.state.tick - bubble.blockedSinceTick >= TICKS.speechBubbleDelay;
+    const cooldownElapsed =
+      bubble.lastShownUntilTick === null ||
+      this.state.tick - bubble.lastShownUntilTick >= TICKS.speechBubbleCooldown;
+    if (delayElapsed && cooldownElapsed) {
+      bubble.visible = true;
+      bubble.text = "Help me, please!";
+    }
   }
 
   private addEvent(message: string): void {

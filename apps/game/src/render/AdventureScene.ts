@@ -10,6 +10,7 @@ import type { RoundStatus, TsarPhase } from "../simulation/types";
 import type { AudioSystem } from "../systems/AudioSystem";
 import type { LiveSession } from "../systems/LiveSession";
 import { EnvironmentRenderer } from "./EnvironmentRenderer";
+import { HeroSpeechBubble } from "./HeroSpeechBubble";
 import { HeroView } from "./HeroView";
 import { LevelCelebrationRenderer } from "./LevelCelebrationRenderer";
 import { ObstacleView } from "./ObstacleView";
@@ -19,6 +20,7 @@ export class AdventureScene extends Phaser.Scene {
   private accumulator = 0;
   private environment!: EnvironmentRenderer;
   private heroView!: HeroView;
+  private speechBubble!: HeroSpeechBubble;
   private obstacleView!: ObstacleView;
   private bombView!: TsarBombRenderer;
   private celebrationView!: LevelCelebrationRenderer;
@@ -30,6 +32,7 @@ export class AdventureScene extends Phaser.Scene {
   private lastHeroState = "boot";
   private renderedLevelId = "";
   private levelCelebrationWasActive = false;
+  private speechBubbleWasVisible = false;
 
   constructor(
     private readonly simulation: Simulation,
@@ -48,6 +51,7 @@ export class AdventureScene extends Phaser.Scene {
     this.environment = new EnvironmentRenderer(this, level);
     this.obstacleView = new ObstacleView(this, this.simulation);
     this.heroView = new HeroView(this);
+    this.speechBubble = new HeroSpeechBubble(this);
     this.bombView = new TsarBombRenderer(this);
     this.celebrationView = new LevelCelebrationRenderer(this);
   }
@@ -68,8 +72,21 @@ export class AdventureScene extends Phaser.Scene {
       return;
     }
     const state = this.simulation.state;
+    const speechBubbleBecameVisible =
+      state.speechBubble.visible && !this.speechBubbleWasVisible;
+    if (speechBubbleBecameVisible && state.heroState === "blocked") {
+      this.simulation.hero.animation = "point";
+    }
     const hero = this.simulation.hero.snapshot();
     this.heroView.update(hero, state.tick, state.reducedMotion);
+    this.speechBubble.update(
+      state,
+      hero.x,
+      hero.y,
+      state.tick,
+      state.reducedMotion,
+    );
+    this.speechBubbleWasVisible = state.speechBubble.visible;
     this.obstacleView.update();
     this.environment.update(this.cameras.main.scrollX, state.tick, state.reducedMotion);
     this.bombView.update(state);

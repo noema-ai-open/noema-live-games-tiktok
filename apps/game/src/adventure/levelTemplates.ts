@@ -238,8 +238,8 @@ function level(
 export function createAdventureCampaign(seed = DEFAULT_SEED): AdventureLevel[] {
   return [
     level(seed, "path-to-sky-beacon", "DER WEG ZUM HIMMELSLEUCHTFEUER", "valley", "spark_burst", 5360, beaconSegments),
-    level(seed ^ 0x19a2b3c4, "neon-caverns", "DIE NEONHÖHLEN", "crystal_caves", "crystal_wave", 5000, cavernSegments),
-    level(seed ^ 0x63d91f27, "storm-pass", "DER STURMPASS", "storm_summit", "fireworks", 5050, stormSegments),
+    level(seed ^ 0x19a2b3c4, "neon-caverns", "DIE KRISTALLHÖHLEN", "crystal_caves", "crystal_wave", 5000, cavernSegments),
+    level(seed ^ 0x63d91f27, "storm-pass", "DER STURMGIPFEL", "storm_summit", "fireworks", 5050, stormSegments),
   ];
 }
 

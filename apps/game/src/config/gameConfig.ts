@@ -18,6 +18,8 @@ export const TICKS = {
   rebuild: FIXED_HZ * 3,
   tsarCooldown: FIXED_HZ * 60,
   routeVote: FIXED_HZ * 10,
+  speechBubbleDelay: FIXED_HZ * 3,
+  speechBubbleCooldown: FIXED_HZ * 12,
   levelCelebration: FIXED_HZ * 4,
   successHold: FIXED_HZ * 12,
   failureHold: FIXED_HZ * 8,
