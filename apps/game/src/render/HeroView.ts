@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import type { HeroSnapshot } from "../adventure/HeroController";
 import { WORLD_GROUND_Y } from "../config/gameConfig";
 
+const VISUAL_GROUND_OFFSET = 12;
+
 /**
  * Procedural placeholder for NURI.
  *
@@ -21,7 +23,7 @@ export class HeroView {
   private readonly belt: Phaser.GameObjects.Rectangle;
   private readonly hood: Phaser.GameObjects.Arc;
   private readonly face: Phaser.GameObjects.Arc;
-  private readonly hair: Phaser.GameObjects.Arc;
+  private readonly hair: Phaser.GameObjects.Ellipse;
   private readonly leftArm: Phaser.GameObjects.Rectangle;
   private readonly rightArm: Phaser.GameObjects.Rectangle;
   private readonly leftGlove: Phaser.GameObjects.Arc;
@@ -144,7 +146,8 @@ export class HeroView {
   }
 
   update(hero: HeroSnapshot, tick: number, reducedMotion: boolean): void {
-    this.container.setPosition(hero.x, hero.y);
+    const visualY = hero.y - VISUAL_GROUND_OFFSET;
+    this.container.setPosition(hero.x, visualY);
     this.container.setScale(hero.facing, 1);
 
     const motion = reducedMotion ? 0.35 : 1;
@@ -161,7 +164,7 @@ export class HeroView {
         this.leftArm.rotation = -swing * 0.78;
         this.rightArm.rotation = swing * 0.78;
         this.scarfTail.rotation = -0.18 + Math.sin(phase * 0.7) * 0.1 * motion;
-        this.container.y = hero.y - Math.abs(Math.sin(phase)) * 4 * motion;
+        this.container.y = visualY - Math.abs(Math.sin(phase)) * 4 * motion;
         break;
       }
       case "jump":
@@ -196,7 +199,7 @@ export class HeroView {
         this.leftArm.rotation = -2.58;
         this.rightArm.rotation = 2.58;
         this.mouth.setScale(1.35);
-        this.container.y = hero.y - Math.abs(Math.sin(phase * 0.65)) * 12 * motion;
+        this.container.y = visualY - Math.abs(Math.sin(phase * 0.65)) * 12 * motion;
         break;
       case "scared":
       case "bomb_reaction":
@@ -217,7 +220,7 @@ export class HeroView {
         this.hood.y = -101;
         break;
       default:
-        this.container.y = hero.y + Math.sin(phase * 0.22) * 2.5 * motion;
+        this.container.y = visualY + Math.sin(phase * 0.22) * 2.5 * motion;
         this.hood.rotation = Math.sin(phase * 0.16) * 0.035 * motion;
         this.scarfTail.rotation = -0.08 + Math.sin(phase * 0.15) * 0.05 * motion;
     }
@@ -235,6 +238,7 @@ export class HeroView {
 
   private resetPose(): void {
     this.container.rotation = 0;
+    this.shadow.y = 4 + VISUAL_GROUND_OFFSET;
     this.body.y = -58;
     this.hood.y = -105;
     this.hood.rotation = 0;

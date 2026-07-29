@@ -228,27 +228,27 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createRoutePanel(): void {
     const plate = this.add
-      .rectangle(0, 0, 650, 210, 0x05131d, 0.97)
+      .rectangle(0, 0, 342, 176, 0x05131d, 0.97)
       .setStrokeStyle(4, 0xffd36a, 0.9);
     const heading = this.add
-      .text(0, -70, "CHAT ENTSCHEIDET · 10 SEKUNDEN", {
+      .text(0, -57, "CHAT ENTSCHEIDET · 10 SEKUNDEN", {
         fontFamily: "Inter, Arial Black, sans-serif",
-        fontSize: "23px",
+        fontSize: "16px",
         fontStyle: "bold",
         color: "#ffd36a",
       })
       .setOrigin(0.5);
     this.routeText = this.add
-      .text(0, 20, "", {
+      .text(0, 18, "", {
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "32px",
+        fontSize: "27px",
         fontStyle: "bold",
         color: "#eafffb",
         align: "center",
       })
       .setOrigin(0.5);
     this.routePanel = this.add
-      .container(LOGICAL_WIDTH / 2, 470, [plate, heading, this.routeText])
+      .container(LOGICAL_WIDTH - 185, 360, [plate, heading, this.routeText])
       .setDepth(62)
       .setVisible(false);
   }
@@ -275,18 +275,18 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createFeedbackPanel(): void {
     const plate = this.add
-      .rectangle(0, 0, 610, 118, 0x05131d, 0.97)
+      .rectangle(0, 0, 610, 92, 0x05131d, 0.97)
       .setStrokeStyle(3, 0x5dffe0, 0.84);
-    this.feedbackIcon = this.add.image(-242, 0, ICON_KEYS.rose).setDisplaySize(84, 84);
-    this.feedbackText = this.add.text(-182, -38, "", {
+    this.feedbackIcon = this.add.image(-248, 0, ICON_KEYS.rose).setDisplaySize(72, 72);
+    this.feedbackText = this.add.text(-198, -32, "", {
       fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "20px",
+      fontSize: "18px",
       fontStyle: "bold",
       color: "#ffffff",
-      lineSpacing: 6,
+      lineSpacing: 3,
     });
     this.feedbackPanel = this.add
-      .container(LOGICAL_WIDTH / 2, 328, [plate, this.feedbackIcon, this.feedbackText])
+      .container(LOGICAL_WIDTH / 2, 72, [plate, this.feedbackIcon, this.feedbackText])
       .setDepth(70)
       .setVisible(false);
   }
@@ -296,7 +296,13 @@ export class AdventureHudScene extends Phaser.Scene {
     const segment = this.simulation.director.current;
     const progress = segment.obstacleType ? this.simulation.obstacles.get(segment) : null;
     const visible = ["blocked", "performing_action", "helper_active"].includes(state.heroState);
-    if (!visible || !progress || progress.resolved || segment.type === "route_fork") {
+    if (
+      !visible ||
+      !progress ||
+      progress.resolved ||
+      segment.type === "route_fork" ||
+      this.feedbackPanel.visible
+    ) {
       this.prompt.setVisible(false);
       return;
     }
@@ -308,14 +314,7 @@ export class AdventureHudScene extends Phaser.Scene {
     this.promptIcon.setTexture(ICON_KEYS[prompt.key]);
     this.promptTitle.setText(prompt.title);
     this.promptSub.setText(prompt.sub);
-    const camera = this.scene.get("AdventureScene").cameras.main;
-    const x = Phaser.Math.Clamp(
-      ((segment.waitX ?? this.simulation.hero.x) - camera.scrollX) * camera.zoom + 150,
-      185,
-      LOGICAL_WIDTH - 185,
-    );
-    const y = Phaser.Math.Clamp(segment.groundY * camera.zoom - 155, 390, 650);
-    this.prompt.setPosition(x, y).setVisible(true);
+    this.prompt.setPosition(LOGICAL_WIDTH - 185, 360).setVisible(true);
   }
 
   private updateRouteVote(): void {
