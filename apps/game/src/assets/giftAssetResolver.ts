@@ -3,11 +3,11 @@ import { normalizeGiftName } from "../gifts/giftCatalog";
 export type GiftAssetKey = "rose" | "doughnut" | "hand-heart" | "corgi" | "galaxy";
 
 export const GIFT_FALLBACKS: Readonly<Record<GiftAssetKey, string>> = {
-  rose: "/assets/gifts/fallback/rose.png?v=3",
-  doughnut: "/assets/gifts/fallback/doughnut.png?v=3",
-  "hand-heart": "/assets/gifts/fallback/hand-heart.png?v=3",
-  corgi: "/assets/gifts/fallback/corgi.png?v=3",
-  galaxy: "/assets/gifts/fallback/galaxy.png?v=3",
+  rose: "/assets/gifts/fallback/rose.png?v=4",
+  doughnut: "/assets/gifts/fallback/doughnut.png?v=4",
+  "hand-heart": "/assets/gifts/fallback/hand-heart.png?v=4",
+  corgi: "/assets/gifts/fallback/corgi.png?v=4",
+  galaxy: "/assets/gifts/fallback/galaxy.png?v=4",
 };
 
 const KEY_BY_NAME: Readonly<Record<string, GiftAssetKey>> = {
