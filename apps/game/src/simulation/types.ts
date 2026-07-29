@@ -1,6 +1,7 @@
 import type { OrderedGameCommand, ViewerIdentity } from "@noema/event-protocol";
 import type { HeroGameState } from "../adventure/HeroStateMachine";
 import type { RouteChoice } from "../adventure/levelTypes";
+import type { LevelCelebrationStyle } from "../adventure/levelTypes";
 
 export type RoundStatus = "ready" | "running" | "paused" | "success" | "failure";
 export type TsarPhase = "idle" | "warning" | "descending" | "impact" | "recovery";
@@ -23,6 +24,15 @@ export type SimulationState = {
   roundStatus: RoundStatus;
   heroState: HeroGameState;
   segmentId: string;
+  levelIndex: number;
+  levelCount: number;
+  completedLevelIds: string[];
+  levelCelebration: {
+    active: boolean;
+    style: LevelCelebrationStyle;
+    startedTick: number;
+    endsTick: number;
+  };
   teamEnergy: number;
   checkpointCount: number;
   safeMode: boolean;

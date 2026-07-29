@@ -9,19 +9,20 @@ Die Spielfläche ist als Hochkant-Block in **720 × 960 (3:4)** ausgelegt. Damit
 passt sie unter ein Kamerabild in einem vertikalen TikTok-Layout. Die Welt
 scrollt seitlich innerhalb dieses Blocks.
 
-## Erste Runde
+## Drei-Level-Kampagne
 
-Das handgebaute Level **DER WEG ZUM HIMMELSLEUCHTFEUER** enthält:
+Die handgebaute Kampagne enthält:
 
-1. Talpfad mit einem Rose-Sprung
-2. Steilhang mit drei Doughnut-Energiesteinen
-3. zehnsekündige Chatabzweigung
-4. große Schlucht mit Hand-Heart-Brücke oder zwei Doughnuts
-5. Gipfeltor mit Corgi-Helfer und Leuchtfeuer-Finale
+1. **DER WEG ZUM HIMMELSLEUCHTFEUER** – Tal, Wald, Ruinen und Gipfeltor
+2. **DIE NEONHÖHLEN** – Kristallhöhlen und verlassene Maschinen
+3. **DER STURMPASS** – Gewitterpfad, Himmelsruinen und finales Leuchtfeuer
 
-Eine Runde dauert 4:30 Minuten. Erfolg bleibt 12 Sekunden, Fehlschlag 8
-Sekunden sichtbar; der Automodus startet anschließend eine neue Runde mit
-einem neuen Seed.
+Jedes Level besitzt Sprünge, Bauteile, Chatabzweigung, Schlucht, Checkpoints
+und Helfertor. Am Levelende läuft eine eigene Feuerwerksanimation. Danach
+beginnt automatisch das nächste Level mit einer frischen Zeit von 4:30.
+
+Nach dem dritten Level bleibt der Kampagnenerfolg 12 Sekunden, ein Fehlschlag
+8 Sekunden sichtbar; der Automodus startet anschließend eine neue Seed-Runde.
 
 ## Geschenkaktionen
 

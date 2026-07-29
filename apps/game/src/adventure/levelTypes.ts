@@ -22,7 +22,14 @@ export type VisualTheme =
   | "neon_forest"
   | "ruined_slope"
   | "ancient_ravine"
-  | "beacon_summit";
+  | "beacon_summit"
+  | "crystal_cavern"
+  | "machine_depths"
+  | "storm_pass"
+  | "sky_ruins";
+
+export type LevelRegion = "valley" | "crystal_caves" | "storm_summit";
+export type LevelCelebrationStyle = "spark_burst" | "crystal_wave" | "fireworks";
 
 export type CameraBehavior = "follow" | "anticipate" | "wide" | "focus";
 
@@ -59,6 +66,8 @@ export type AdventureLevel = {
   name: string;
   version: string;
   seed: number;
+  region: LevelRegion;
+  celebration: LevelCelebrationStyle;
   startX: number;
   finishX: number;
   segments: LevelSegment[];

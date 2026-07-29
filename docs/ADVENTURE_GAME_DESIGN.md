@@ -2,9 +2,10 @@
 
 ## Ziel
 
-NURI bringt einen leuchtenden Energiekern zum Himmelsleuchtfeuer, bevor 4:30
-Minuten ablaufen. Die einzelne Figur läuft automatisch, reagiert animiert auf
-Hindernisse und wartet auf klar benannte Zuschauerhilfe.
+NURI bringt einen leuchtenden Energiekern durch drei aufeinanderfolgende Level
+zum Himmelsleuchtfeuer. Pro Level stehen 4:30 Minuten zur Verfügung. Die
+einzelne Figur läuft automatisch, reagiert animiert auf Hindernisse und wartet
+auf klar benannte Zuschauerhilfe.
 
 ## Kernschleife
 
@@ -25,7 +26,12 @@ push, celebrate, scared und bomb_reaction.
 
 ## Rundenende
 
-Am Gipfel setzt NURI den Kern ein und aktiviert das Leuchtfeuer. Die letzte
-entscheidende Hilfe wird gewürdigt. Erfolg bleibt 12 Sekunden, Fehlschlag 8
-Sekunden sichtbar; anschließend startet der Automodus eine neue Seed-Runde.
+Jedes Level endet mit vier Sekunden Feuerwerk und wechselt automatisch weiter.
+Am Ende des Sturmpasses setzt NURI den Kern ein und aktiviert das
+Leuchtfeuer. Die letzte entscheidende Hilfe wird gewürdigt. Erfolg bleibt 12
+Sekunden, Fehlschlag 8 Sekunden sichtbar; anschließend startet der Automodus
+eine neue Seed-Runde.
+
+Die drei Regionen sind Tal/Waldruinen, Neonhöhlen/Maschinendecks und
+Sturmpass/Himmelsruinen. Ihre Segmentfolgen sind deterministisch.
 

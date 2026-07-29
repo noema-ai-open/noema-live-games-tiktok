@@ -548,7 +548,7 @@ export class OperatorPanel {
     this.setText("energy", `${Math.round(state.teamEnergy)}%`);
     this.setText(
       "round-result",
-      `${state.roundStatus.toUpperCase()} · ${state.segmentId}`,
+      `LEVEL ${state.levelIndex + 1}/${state.levelCount} · ${state.roundStatus.toUpperCase()} · ${state.segmentId}`,
     );
     this.setText(
       "recovery",

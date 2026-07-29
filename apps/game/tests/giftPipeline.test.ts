@@ -157,6 +157,18 @@ describe("adventure gift rules", () => {
     expect(commands[0]?.command).toMatchObject({ type: "route_vote", choice: "left" });
   });
 
+  it("accepts 1 and 2 as live route votes", () => {
+    const { engine, inbox } = createEngine();
+    engine.handle(chatEvent("1", "number-left"), 1000);
+    const second = chatEvent("2", "number-right");
+    second.actor = { id: "viewer-2", username: "viewer-two" };
+    engine.handle(second, 1001);
+    expect(inbox.drain().map((item) => item.command)).toMatchObject([
+      { type: "route_vote", choice: "left" },
+      { type: "route_vote", choice: "right" },
+    ]);
+  });
+
   it("routes likes, follows and shares only to free support actions", () => {
     const { engine, inbox } = createEngine();
     const base = {

@@ -50,6 +50,19 @@ export class RouteVoteController {
     return this.snapshot.winner;
   }
 
+  reset(): void {
+    this.eventIds.clear();
+    this.voterIds.clear();
+    this.snapshot = {
+      active: false,
+      startedTick: -1,
+      endsTick: -1,
+      left: 0,
+      right: 0,
+      winner: null,
+    };
+  }
+
   get state(): RouteVoteSnapshot {
     return { ...this.snapshot };
   }

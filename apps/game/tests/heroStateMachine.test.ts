@@ -26,6 +26,7 @@ describe("HeroStateMachine", () => {
       "falling",
       "helper_active",
       "checkpoint",
+      "level_complete",
       "bomb_warning",
       "bomb_impact",
       "resetting",

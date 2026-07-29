@@ -18,7 +18,9 @@ export class BridgeView {
       const brace = scene.add.rectangle(0, 13, Math.max(34, width - 20), 7, 0x17465a, 1);
       const glow = scene.add.rectangle(0, -4, Math.max(28, width - 28), 4, 0xffffff, 0.8);
       const container = scene.add
-        .container(start + width * (index + 0.5), segment.groundY + 2, [brace, plate, glow])
+        // The plate is 20 px high: +10 keeps its upper edge exactly on the
+        // gameplay ground line used by HeroController.
+        .container(start + width * (index + 0.5), segment.groundY + 10, [brace, plate, glow])
         .setDepth(12)
         .setVisible(false);
       this.segments.push(container);

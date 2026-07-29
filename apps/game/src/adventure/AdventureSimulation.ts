@@ -23,8 +23,8 @@ import { HeroController } from "./HeroController";
 import { LevelDirector } from "./LevelDirector";
 import { ObstacleController } from "./ObstacleController";
 import { RouteVoteController } from "./RouteVoteController";
-import { createBeaconLevel } from "./levelTemplates";
-import type { AdventureAction, LevelSegment } from "./levelTypes";
+import { createAdventureCampaign } from "./levelTemplates";
+import type { AdventureAction, AdventureLevel, LevelSegment } from "./levelTypes";
 
 const INTRO_TICKS = FIXED_HZ * 2;
 const CHECKPOINT_TICKS = Math.round(FIXED_HZ * 0.65);
@@ -41,6 +41,8 @@ export class AdventureSimulation {
   readonly giftActions = new GiftActionRouter();
   readonly routeVote = new RouteVoteController();
 
+  levels: AdventureLevel[];
+  levelIndex = 0;
   hero: HeroController;
   director: LevelDirector;
   obstacles: ObstacleController;
@@ -52,10 +54,12 @@ export class AdventureSimulation {
   private checkpointUntilTick = -1;
   private lastRevealTick = -1;
   private fallResetPending = false;
+  private introUntilTick = INTRO_TICKS;
 
   constructor(seed = DEFAULT_SEED) {
+    this.levels = createAdventureCampaign(seed);
     this.hero = new HeroController();
-    this.director = new LevelDirector(createBeaconLevel(seed));
+    this.director = new LevelDirector(this.levels[0]!);
     this.obstacles = new ObstacleController();
     this.checkpoints = new CheckpointSystem();
     this.state = this.createState(seed);
@@ -72,8 +76,10 @@ export class AdventureSimulation {
   }
 
   resetRound(seed = this.state.seed): void {
+    this.levels = createAdventureCampaign(seed);
+    this.levelIndex = 0;
     this.hero = new HeroController();
-    this.director = new LevelDirector(createBeaconLevel(seed));
+    this.director = new LevelDirector(this.levels[0]!);
     this.obstacles = new ObstacleController();
     this.checkpoints = new CheckpointSystem();
     this.state = this.createState(seed);
@@ -83,6 +89,8 @@ export class AdventureSimulation {
     this.checkpointUntilTick = -1;
     this.lastRevealTick = -1;
     this.fallResetPending = false;
+    this.introUntilTick = INTRO_TICKS;
+    this.routeVote.reset();
     this.hero.startIntro();
     this.syncState();
   }
@@ -106,12 +114,19 @@ export class AdventureSimulation {
     }
 
     this.state.tick += 1;
-    this.state.remainingTicks = Math.max(0, this.state.remainingTicks - 1);
 
     if (this.updateBomb()) {
       this.syncState();
       return;
     }
+
+    if (this.state.levelCelebration.active) {
+      this.updateLevelCelebration();
+      this.syncState();
+      return;
+    }
+
+    this.state.remainingTicks = Math.max(0, this.state.remainingTicks - 1);
 
     if (this.state.remainingTicks === 0) {
       this.finishFailure();
@@ -129,7 +144,11 @@ export class AdventureSimulation {
 
   getAscentProgress(): number {
     const level = this.director.level;
-    return Math.max(0, Math.min(1, (this.hero.x - level.startX) / (level.finishX - level.startX)));
+    const local = Math.max(
+      0,
+      Math.min(1, (this.hero.x - level.startX) / (level.finishX - level.startX)),
+    );
+    return (this.levelIndex + local) / this.levels.length;
   }
 
   clearEventFeed(): void {
@@ -145,6 +164,8 @@ export class AdventureSimulation {
       Math.round(this.hero.x),
       Math.round(this.hero.y),
       this.hero.state,
+      this.levelIndex,
+      this.state.completedLevelIds.join(","),
       this.director.segmentIndex,
       this.director.chosenRoute ?? "-",
       [...this.director.completedSegments].join(","),
@@ -181,6 +202,15 @@ export class AdventureSimulation {
       roundStatus: "ready",
       heroState: "intro",
       segmentId: "station-intro",
+      levelIndex: 0,
+      levelCount: this.levels.length,
+      completedLevelIds: [],
+      levelCelebration: {
+        active: false,
+        style: this.levels[0]!.celebration,
+        startedTick: -1,
+        endsTick: -1,
+      },
       teamEnergy: 0,
       checkpointCount: 0,
       safeMode: false,
@@ -322,7 +352,7 @@ export class AdventureSimulation {
 
   private updateAdventure(): void {
     if (this.hero.state === "intro") {
-      if (this.state.tick >= INTRO_TICKS) {
+      if (this.state.tick >= this.introUntilTick) {
         this.director.completeCurrent();
         this.hero.startRunning();
       }
@@ -397,9 +427,10 @@ export class AdventureSimulation {
 
     if (this.hero.state !== "running" && this.hero.state !== "approaching_obstacle") return;
     const segment = this.director.current;
+    this.hero.y = segment.groundY;
 
     if (segment.type === "finish") {
-      if (this.hero.stepRunning(this.director.level.finishX)) this.finishSuccess();
+      if (this.hero.stepRunning(this.director.level.finishX)) this.finishCurrentLevel();
       return;
     }
 
@@ -473,7 +504,12 @@ export class AdventureSimulation {
       this.addEvent("ABKLINGZEIT // ZAR-BOMBE nicht bereit");
       return;
     }
-    if (this.hero.state === "intro" || this.hero.state === "success" || this.hero.state === "failure") return;
+    if (
+      this.hero.state === "intro" ||
+      this.hero.state === "level_complete" ||
+      this.hero.state === "success" ||
+      this.hero.state === "failure"
+    ) return;
 
     bomb.phase = "warning";
     bomb.actor = actor;
@@ -512,13 +548,75 @@ export class AdventureSimulation {
       return true;
     }
 
-    this.restoreCheckpoint(0);
-    bomb.phase = "idle";
-    bomb.actor = null;
-    bomb.transactionId = null;
-    bomb.impactApplied = false;
-    this.addEvent("TEAM REBUILD // Abschnitt neu gestartet");
+    const cooldownUntilTick = bomb.cooldownUntilTick;
+    this.resetCampaignAfterBomb();
+    this.state.tsarBomb.cooldownUntilTick = cooldownUntilTick;
+    const resetBomb = this.state.tsarBomb;
+    resetBomb.phase = "idle";
+    resetBomb.actor = null;
+    resetBomb.transactionId = null;
+    resetBomb.impactApplied = false;
+    this.addEvent("TEAM REBUILD // ZURUECK ZU LEVEL 1");
     return true;
+  }
+
+  private finishCurrentLevel(): void {
+    if (this.state.levelCelebration.active) return;
+    if (!this.state.completedLevelIds.includes(this.director.level.id)) {
+      this.state.completedLevelIds.push(this.director.level.id);
+    }
+    this.state.levelCelebration = {
+      active: true,
+      style: this.director.level.celebration,
+      startedTick: this.state.tick,
+      endsTick: this.state.tick + TICKS.levelCelebration,
+    };
+    this.hero.celebrateLevel();
+    this.addEvent(`LEVEL ${this.levelIndex + 1} GESCHAFFT // FEUERWERK`);
+  }
+
+  private updateLevelCelebration(): void {
+    if (this.state.tick < this.state.levelCelebration.endsTick) return;
+    this.state.levelCelebration.active = false;
+    if (this.levelIndex >= this.levels.length - 1) {
+      this.finishSuccess();
+      return;
+    }
+    this.loadLevel(this.levelIndex + 1);
+    this.addEvent(`LEVEL ${this.levelIndex + 1} // ${this.director.level.name}`);
+  }
+
+  private loadLevel(index: number): void {
+    this.levelIndex = Math.max(0, Math.min(this.levels.length - 1, index));
+    const level = this.levels[this.levelIndex]!;
+    this.hero = new HeroController(level.startX, level.segments[0]?.groundY ?? WORLD_GROUND_Y);
+    this.director = new LevelDirector(level);
+    this.obstacles = new ObstacleController();
+    this.checkpoints = new CheckpointSystem();
+    this.routeVote.reset();
+    this.checkpointUntilTick = -1;
+    this.lastRevealTick = -1;
+    this.fallResetPending = false;
+    this.state.levelIndex = this.levelIndex;
+    this.state.levelCount = this.levels.length;
+    this.state.remainingTicks = ROUND_DURATION_TICKS;
+    this.state.checkpointCount = 0;
+    this.state.chosenRoute = null;
+    this.state.levelCelebration = {
+      active: false,
+      style: level.celebration,
+      startedTick: -1,
+      endsTick: -1,
+    };
+    this.introUntilTick = this.state.tick + INTRO_TICKS;
+    this.hero.startIntro();
+  }
+
+  private resetCampaignAfterBomb(): void {
+    this.state.completedLevelIds = [];
+    this.state.teamEnergy = 0;
+    this.state.lastContributor = null;
+    this.loadLevel(0);
   }
 
   private restoreCheckpoint(timePenaltyTicks: number): void {
@@ -552,6 +650,8 @@ export class AdventureSimulation {
   private syncState(): void {
     this.state.heroState = this.hero.state;
     this.state.segmentId = this.director.current.id;
+    this.state.levelIndex = this.levelIndex;
+    this.state.levelCount = this.levels.length;
     this.state.chosenRoute = this.director.chosenRoute;
     this.state.checkpointCount = this.checkpoints.reached;
   }

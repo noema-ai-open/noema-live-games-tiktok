@@ -8,6 +8,7 @@ export class TsarBombRenderer {
   private readonly sender: Phaser.GameObjects.Text;
   private readonly countdown: Phaser.GameObjects.Text;
   private readonly bomb: Phaser.GameObjects.Container;
+  private readonly mushroom: Phaser.GameObjects.Graphics;
   private readonly rebuild: Phaser.GameObjects.Text;
   private lastPhase: TsarPhase = "idle";
 
@@ -63,14 +64,29 @@ export class TsarBombRenderer {
       .setScrollFactor(0)
       .setDepth(104)
       .setVisible(false);
+    this.mushroom = scene.add
+      .graphics()
+      .setScrollFactor(0)
+      .setDepth(104)
+      .setVisible(false);
+    this.mushroom.fillStyle(0x020205, 1);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 360, 430, 190);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 410, 300, 150);
+    this.mushroom.fillRoundedRect(LOGICAL_WIDTH / 2 - 72, 390, 144, 300, 50);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 690, 250, 74);
+    this.mushroom.lineStyle(8, 0xff7b38, 0.82);
+    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 360, 430, 190);
+    this.mushroom.lineStyle(3, 0xffd36a, 0.64);
+    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 410, 300, 150);
     this.rebuild = scene.add
-      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, "TEAM REBUILD", {
+      .text(LOGICAL_WIDTH / 2, 770, "TEAM REBUILD\nZURÜCK ZU LEVEL 1", {
         fontFamily: "Inter, Arial Black, sans-serif",
-        fontSize: "64px",
+        fontSize: "48px",
         fontStyle: "bold",
         color: "#7ffff0",
         backgroundColor: "#071924dd",
         padding: { x: 34, y: 20 },
+        align: "center",
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -103,16 +119,20 @@ export class TsarBombRenderer {
         .setPosition(LOGICAL_WIDTH / 2, -80 + progress * (LOGICAL_HEIGHT + 130));
       if (!state.reducedMotion) this.bomb.rotation = progress * 1.4;
     } else if (bomb.phase === "impact") {
-      this.overlay.setAlpha(state.reducedMotion ? 0.25 : 0.82);
+      this.overlay.setFillStyle(0xffffff, 1).setAlpha(state.reducedMotion ? 0.38 : 1);
+      this.mushroom.setVisible(true).setAlpha(state.reducedMotion ? 0.7 : 1);
       this.rebuild.setVisible(true);
       if (changed) {
         this.scene.cameras.main.shake(
-          state.reducedMotion ? 120 : 620,
-          state.reducedMotion ? 0.0015 : 0.012,
+          state.reducedMotion ? 100 : 950,
+          state.reducedMotion ? 0.001 : 0.022,
         );
       }
     } else if (bomb.phase === "recovery") {
-      this.overlay.setFillStyle(0x082d35, 0.28).setAlpha(1);
+      this.overlay.setFillStyle(0x000005, 1).setAlpha(state.reducedMotion ? 0.72 : 0.94);
+      this.mushroom
+        .setVisible(true)
+        .setAlpha(state.reducedMotion ? 0.42 : 0.72 + Math.sin(state.tick * 0.2) * 0.12);
       this.rebuild.setVisible(true);
     }
 
@@ -125,6 +145,7 @@ export class TsarBombRenderer {
     this.sender.setVisible(false);
     this.countdown.setVisible(false);
     this.bomb.setVisible(false);
+    this.mushroom.setVisible(false);
     this.rebuild.setVisible(false);
   }
 }

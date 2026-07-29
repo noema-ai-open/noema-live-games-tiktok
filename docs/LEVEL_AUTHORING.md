@@ -34,3 +34,9 @@ instanziiert. Route und Segmentfolge müssen bei gleichem Seed und gleichen
 Commands identisch bleiben. Neue Visuals werden anhand von `visualTheme` in der
 Render-Schicht ergänzt, nicht in der Simulation.
 
+`createAdventureCampaign(seed)` liefert die geordnete Kampagne. Ein Level
+definiert zusätzlich `region` und `celebration`. Aktuell sind
+`valley/spark_burst`, `crystal_caves/crystal_wave` und
+`storm_summit/fireworks` umgesetzt. Beim Übergang wird die Levelzeit
+zurückgesetzt; erst das letzte `finish` beendet die Runde.
+

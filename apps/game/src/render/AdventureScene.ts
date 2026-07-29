@@ -6,6 +6,7 @@ import type { AudioSystem } from "../systems/AudioSystem";
 import type { LiveSession } from "../systems/LiveSession";
 import { EnvironmentRenderer } from "./EnvironmentRenderer";
 import { HeroView } from "./HeroView";
+import { LevelCelebrationRenderer } from "./LevelCelebrationRenderer";
 import { ObstacleView } from "./ObstacleView";
 import { TsarBombRenderer } from "./TsarBombRenderer";
 
@@ -15,12 +16,15 @@ export class AdventureScene extends Phaser.Scene {
   private heroView!: HeroView;
   private obstacleView!: ObstacleView;
   private bombView!: TsarBombRenderer;
+  private celebrationView!: LevelCelebrationRenderer;
   private lastAnimation = "";
   private lastParts = 0;
   private lastCheckpoint = 0;
   private lastTsarPhase: TsarPhase = "idle";
   private lastStatus: RoundStatus = "ready";
   private lastHeroState = "boot";
+  private renderedLevelId = "";
+  private levelCelebrationWasActive = false;
 
   constructor(
     private readonly simulation: Simulation,
@@ -32,12 +36,14 @@ export class AdventureScene extends Phaser.Scene {
 
   create(): void {
     const level = this.simulation.director.level;
+    this.renderedLevelId = level.id;
     this.cameras.main.setBackgroundColor("#07111f");
     this.cameras.main.setBounds(0, 0, level.finishX + 300, LOGICAL_HEIGHT);
     this.environment = new EnvironmentRenderer(this, level);
     this.obstacleView = new ObstacleView(this, this.simulation);
     this.heroView = new HeroView(this);
     this.bombView = new TsarBombRenderer(this);
+    this.celebrationView = new LevelCelebrationRenderer(this);
   }
 
   update(_time: number, delta: number): void {
@@ -51,12 +57,17 @@ export class AdventureScene extends Phaser.Scene {
   }
 
   private renderAdventure(): void {
+    if (this.renderedLevelId !== this.simulation.director.level.id) {
+      this.scene.restart();
+      return;
+    }
     const state = this.simulation.state;
     const hero = this.simulation.hero.snapshot();
     this.heroView.update(hero, state.tick, state.reducedMotion);
     this.obstacleView.update();
     this.environment.update(this.cameras.main.scrollX, state.tick, state.reducedMotion);
     this.bombView.update(state);
+    this.celebrationView.update(state);
     this.updateCamera();
     this.trackAudio();
   }
@@ -129,6 +140,11 @@ export class AdventureScene extends Phaser.Scene {
       if (state.tsarBomb.phase === "recovery") this.audio.play("rebuild");
       this.lastTsarPhase = state.tsarBomb.phase;
     }
+
+    if (state.levelCelebration.active && !this.levelCelebrationWasActive) {
+      this.audio.play("fireworks");
+    }
+    this.levelCelebrationWasActive = state.levelCelebration.active;
 
     if (state.roundStatus !== this.lastStatus) {
       if (state.roundStatus === "success") this.audio.play("success");

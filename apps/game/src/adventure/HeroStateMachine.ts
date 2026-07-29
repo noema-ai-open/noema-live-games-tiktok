@@ -11,6 +11,7 @@ export type HeroGameState =
   | "falling"
   | "helper_active"
   | "checkpoint"
+  | "level_complete"
   | "bomb_warning"
   | "bomb_impact"
   | "resetting"
@@ -26,6 +27,7 @@ const transitions: Readonly<Record<HeroGameState, readonly HeroGameState[]>> = {
     "route_vote",
     "falling",
     "checkpoint",
+    "level_complete",
     "success",
     "failure",
     "bomb_warning",
@@ -40,6 +42,7 @@ const transitions: Readonly<Record<HeroGameState, readonly HeroGameState[]>> = {
   falling: ["helper_active", "resetting", "bomb_warning", "paused"],
   helper_active: ["running", "resetting", "bomb_warning", "paused"],
   checkpoint: ["running", "bomb_warning", "paused"],
+  level_complete: ["intro", "success", "bomb_warning", "paused"],
   bomb_warning: ["bomb_impact"],
   bomb_impact: ["resetting"],
   resetting: ["running", "blocked"],
@@ -55,6 +58,7 @@ const transitions: Readonly<Record<HeroGameState, readonly HeroGameState[]>> = {
     "falling",
     "helper_active",
     "checkpoint",
+    "level_complete",
   ],
 };
 

@@ -81,6 +81,9 @@ describe("AdventureSimulation", () => {
     expect(voteSent).toBe(true);
     expect(simulation.state.chosenRoute).toBe("right");
     expect(simulation.state.roundStatus).toBe("success");
+    expect(simulation.state.levelCount).toBe(3);
+    expect(simulation.state.completedLevelIds).toHaveLength(3);
+    expect(simulation.state.levelIndex).toBe(2);
     expect(simulation.state.eventFeed).toContain(
       "GIPFEL ERREICHT // LEUCHTFEUER AKTIVIERT",
     );

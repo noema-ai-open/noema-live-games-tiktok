@@ -27,6 +27,7 @@ export class EnvironmentRenderer {
     this.drawGround(scene, level.segments);
     this.drawRuinLanguage(scene, level);
     this.drawLandmarks(scene, level);
+    this.drawRegionalDetails(scene, level);
   }
 
   update(_cameraScrollX: number, tick: number, reducedMotion: boolean): void {
@@ -40,7 +41,19 @@ export class EnvironmentRenderer {
   private drawSky(scene: Phaser.Scene, level: AdventureLevel): void {
     const width = level.finishX + 2200;
     const sky = scene.add.graphics();
-    sky.fillGradientStyle(0x030914, 0x061529, 0x123348, 0x1b4850, 1);
+    const skyColors =
+      level.region === "crystal_caves"
+        ? [0x050514, 0x11102e, 0x201351, 0x082f43]
+        : level.region === "storm_summit"
+          ? [0x050a16, 0x111d35, 0x24445a, 0x526979]
+          : [0x030914, 0x061529, 0x123348, 0x1b4850];
+    sky.fillGradientStyle(
+      skyColors[0]!,
+      skyColors[1]!,
+      skyColors[2]!,
+      skyColors[3]!,
+      1,
+    );
     sky.fillRect(-800, 0, width, LOGICAL_HEIGHT);
 
     sky.fillStyle(0x5c2b68, 0.11);
@@ -127,8 +140,14 @@ export class EnvironmentRenderer {
     for (const segment of segments) {
       const upperSection = segment.section >= 4;
       const top = segment.groundY;
-      const base = upperSection ? 0x132b38 : 0x19393d;
-      const edge = upperSection ? 0x75f3dd : 0x49ccc2;
+      const crystal = ["crystal_cavern", "machine_depths"].includes(segment.visualTheme);
+      const storm = ["storm_pass", "sky_ruins"].includes(segment.visualTheme);
+      const base = crystal
+        ? (upperSection ? 0x191c43 : 0x202650)
+        : storm
+          ? (upperSection ? 0x203344 : 0x294556)
+          : (upperSection ? 0x132b38 : 0x19393d);
+      const edge = crystal ? 0xaa72ff : storm ? 0xb7f5ff : upperSection ? 0x75f3dd : 0x49ccc2;
 
       const drawPlatform = (start: number, end: number, platformTop = top): void => {
         const width = Math.max(0, end - start);
@@ -252,5 +271,34 @@ export class EnvironmentRenderer {
     landmarks.fillCircle(towerX, 128, 12);
 
     this.ground.add(landmarks);
+  }
+
+  private drawRegionalDetails(scene: Phaser.Scene, level: AdventureLevel): void {
+    const details = scene.add.graphics();
+    if (level.region === "crystal_caves") {
+      for (let x = 300; x < level.finishX; x += 310) {
+        const height = 60 + ((x / 11) % 90);
+        const y = 650;
+        details.fillStyle(x % 620 === 0 ? 0xff67ca : 0x8b6dff, 0.34);
+        details.fillTriangle(x, y, x + 34, y - height, x + 70, y);
+        details.lineStyle(3, 0x7ffff0, 0.38);
+        details.lineBetween(x + 34, y - height, x + 48, y - 8);
+      }
+    } else if (level.region === "storm_summit") {
+      for (let x = 480; x < level.finishX; x += 680) {
+        details.lineStyle(5, 0xd8fbff, 0.28);
+        details.beginPath();
+        details.moveTo(x, 120);
+        details.lineTo(x - 38, 220);
+        details.lineTo(x + 12, 214);
+        details.lineTo(x - 32, 330);
+        details.strokePath();
+      }
+      details.fillStyle(0xeaffff, 0.08);
+      for (let x = 120; x < level.finishX; x += 210) {
+        details.fillEllipse(x, 420 + ((x / 9) % 120), 190, 28);
+      }
+    }
+    this.middle.add(details);
   }
 }

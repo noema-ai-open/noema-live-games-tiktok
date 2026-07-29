@@ -14,6 +14,7 @@ export type AudioCue =
   | "bomb_warning"
   | "bomb_impact"
   | "rebuild"
+  | "fireworks"
   | "success"
   | "failure";
 
@@ -53,6 +54,7 @@ const CUES: Record<AudioCue, CueSpec> = {
   bomb_warning: { channel: "warnings", type: "square", from: 420, to: 190, durationSeconds: 0.55, gain: 0.06 },
   bomb_impact: { channel: "warnings", type: "sawtooth", from: 150, to: 30, durationSeconds: 1, gain: 0.1, noise: 1 },
   rebuild: { channel: "effects", type: "sine", from: 340, to: 720, durationSeconds: 0.5, gain: 0.05, harmonic: 1.5 },
+  fireworks: { channel: "effects", type: "triangle", from: 420, to: 1320, durationSeconds: 0.85, gain: 0.065, harmonic: 1.5, noise: 0.3 },
   success: { channel: "effects", type: "triangle", from: 620, to: 1240, durationSeconds: 0.6, gain: 0.06, harmonic: 1.25 },
   failure: { channel: "warnings", type: "sine", from: 260, to: 110, durationSeconds: 0.55, gain: 0.05 },
 };

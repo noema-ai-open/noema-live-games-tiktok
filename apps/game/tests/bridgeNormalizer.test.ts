@@ -61,6 +61,19 @@ describe("bridge normalizer", () => {
     expect(like.kind === "event" && like.event.likeCount).toBe(12);
   });
 
+  it("reads numeric route votes from current bridge metadata shapes", () => {
+    for (const metadata of [{ comment: "1" }, { text: 2 }, { message: "rechts" }]) {
+      const chat = normalizeBridgeFrame({
+        ...giftFrame,
+        event_type: "chat_message",
+        message: null,
+        metadata,
+      });
+      expect(chat.kind).toBe("event");
+      if (chat.kind === "event") expect(chat.event.message).toBe(String(Object.values(metadata)[0]));
+    }
+  });
+
   it("reports bridge status, system and blocked frames separately", () => {
     const status = normalizeBridgeFrame({
       ...giftFrame,

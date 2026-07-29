@@ -2,7 +2,8 @@ import Phaser from "phaser";
 import type { HeroSnapshot } from "../adventure/HeroController";
 import { WORLD_GROUND_Y } from "../config/gameConfig";
 
-const VISUAL_GROUND_OFFSET = 12;
+/** Bottom of the procedural boots is 14.5 px below the container origin. */
+const VISUAL_GROUND_OFFSET = 16;
 
 /**
  * Procedural placeholder for NURI.
@@ -220,7 +221,7 @@ export class HeroView {
         this.hood.y = -101;
         break;
       default:
-        this.container.y = visualY + Math.sin(phase * 0.22) * 2.5 * motion;
+        this.container.y = visualY - Math.abs(Math.sin(phase * 0.22)) * 2.5 * motion;
         this.hood.rotation = Math.sin(phase * 0.16) * 0.035 * motion;
         this.scarfTail.rotation = -0.08 + Math.sin(phase * 0.15) * 0.05 * motion;
     }

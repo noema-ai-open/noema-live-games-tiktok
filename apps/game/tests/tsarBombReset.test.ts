@@ -32,13 +32,36 @@ function finishBomb(simulation: Simulation): void {
   }
 }
 
+function driveToLevel(simulation: Simulation, targetLevel: number): void {
+  let vote = 0;
+  for (let index = 0; index < 20_000 && simulation.state.levelIndex < targetLevel; index += 1) {
+    if (simulation.state.heroState === "blocked") {
+      const type = simulation.director.current.type;
+      if (type === "small_gap") {
+        simulation.submit({ type: "place_jump_field", zoneId: "current", durationTicks: 24 });
+      } else if (type === "high_ledge") {
+        simulation.submit({ type: "repair_structure", amount: 3 });
+      } else if (type === "broken_bridge" || type === "ravine") {
+        simulation.submit({ type: "build_bridge", zoneId: "current" });
+      } else if (type === "repair_gate") {
+        simulation.submit({ type: "rescue_worker" });
+      }
+    }
+    if (simulation.state.heroState === "route_vote" && simulation.routeVote.state.left === 0) {
+      simulation.submit({ type: "route_vote", eventId: `campaign-vote-${vote++}`, choice: "left" });
+    }
+    simulation.step();
+  }
+  expect(simulation.state.levelIndex).toBe(targetLevel);
+}
+
 describe("ZAR-BOMBE reset", () => {
-  it("destroys only current temporary parts and restores the checkpoint", () => {
+  it("resets the complete campaign from level 3 to a fresh level 1", () => {
     const simulation = new Simulation(7);
-    const { gap, ravine, completed } = prepareCheckpointAtRavine(simulation);
-    simulation.submit({ type: "repair_structure", amount: 3 });
-    for (let index = 0; index < 40; index += 1) simulation.step();
-    expect(simulation.obstacles.get(ravine).visibleParts).toBe(3);
+    simulation.startRound();
+    driveToLevel(simulation, 2);
+    expect(simulation.state.completedLevelIds).toHaveLength(2);
+    for (let index = 0; index < TICKS.second * 3; index += 1) simulation.step();
 
     simulation.submit({ type: "tsar_bomb", transactionId: "galaxy-1" });
     simulation.step();
@@ -46,10 +69,11 @@ describe("ZAR-BOMBE reset", () => {
     finishBomb(simulation);
 
     expect(simulation.state.tsarBomb.phase).toBe("idle");
-    expect(simulation.hero.x).toBe(ravine.waitX);
-    expect(simulation.obstacles.get(ravine).visibleParts).toBe(0);
-    expect(simulation.obstacles.get(gap).resolved).toBe(true);
-    for (const id of completed) expect(simulation.director.completedSegments.has(id)).toBe(true);
+    expect(simulation.state.levelIndex).toBe(0);
+    expect(simulation.director.level.id).toBe("path-to-sky-beacon");
+    expect(simulation.state.completedLevelIds).toEqual([]);
+    expect(simulation.hero.x).toBe(simulation.director.level.startX);
+    expect(simulation.state.remainingTicks).toBeGreaterThan(TICKS.second * 269);
   });
 
   it("processes a Galaxy transaction at most once", () => {

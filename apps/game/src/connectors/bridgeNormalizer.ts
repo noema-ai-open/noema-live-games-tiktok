@@ -169,7 +169,13 @@ export function normalizeBridgeFrame(
     );
   }
   if (kind === "chat") {
-    const message = asString(frame["message"]);
+    const message =
+      asString(frame["message"]) ??
+      asString(frame["comment"]) ??
+      asString(frame["text"]) ??
+      asString(metadata["message"]) ??
+      asString(metadata["comment"]) ??
+      asString(metadata["text"]);
     if (message !== undefined) event.message = message.slice(0, 200);
   }
 

@@ -5,7 +5,7 @@
 - `AdventureSimulation`: deterministischer 30-Hz-Rundenkern
 - `HeroStateMachine`: gültige Zustände und Doppelauslösungsschutz
 - `HeroController`: feste Lauf-, Sprung-, Kletter-, Fall- und Aktionskurven
-- `LevelDirector`: Segmentfolge und gewählte Route
+- `LevelDirector`: Segmentfolge und gewählte Route eines Kampagnenlevels
 - `ObstacleController`: reale Bauteile, Fertigstellung und Zerstörung
 - `RouteVoteController`: Zehnsekundenfenster und Deduplizierung
 - `CheckpointSystem`: Snapshot und lokale Wiederherstellung
@@ -17,14 +17,16 @@
 `AdventureHudScene` bleibt kamerafest. `HeroView` rendert die artikulierte
 Platzhalterfigur; `EnvironmentRenderer`, `ObstacleView`, `BridgeView`,
 `BlockBuilderView`, `HelperView` und `TsarBombRenderer` visualisieren nur den
-Simulationszustand.
+Simulationszustand. `LevelCelebrationRenderer` zeichnet die deterministischen
+Feuerwerksfolgen. Beim Levelwechsel wird nur die Adventure-Szene neu aufgebaut;
+Connector, Replay, Operatoransicht und Eventpipeline bleiben bestehen.
 
 ## Zustandsmaschine
 
 `boot`, `intro`, `running`, `approaching_obstacle`, `blocked`, `route_vote`,
 `performing_action`, `jumping`, `climbing`, `falling`, `helper_active`,
-`checkpoint`, `bomb_warning`, `bomb_impact`, `resetting`, `success`, `failure`
-und `paused`.
+`checkpoint`, `level_complete`, `bomb_warning`, `bomb_impact`, `resetting`,
+`success`, `failure` und `paused`.
 
 Aktionen werden nur in passenden Zuständen akzeptiert. Eine zweite Rose
 während eines Sprungs, eine zweite fertige Brücke oder Galaxy während einer

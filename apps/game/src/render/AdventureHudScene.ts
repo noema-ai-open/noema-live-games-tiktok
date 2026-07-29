@@ -33,8 +33,9 @@ const SLOT_DATA: readonly {
 /**
  * Stream-safe HUD for the 720x960 block below the camera image.
  *
- * Important controls live in the upper half of the game block. The lower edge
- * remains deliberately quiet because TikTok may place chat and captions there.
+ * Gameplay remains visible in the upper part of the game block. TikTok may
+ * cover the lower third with chat, so progress and the permanent legend live
+ * there while the timer and current action remain above the overlay zone.
  */
 export class AdventureHudScene extends Phaser.Scene {
   private levelName!: Phaser.GameObjects.Text;
@@ -81,7 +82,7 @@ export class AdventureHudScene extends Phaser.Scene {
     this.createResultPanel();
     this.createFeedbackPanel();
     this.add
-      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 18, "Powered by NOEMA AI", {
+      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 3, "Powered by NOEMA AI", {
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "11px",
         color: "#6f9ba5",
@@ -94,8 +95,17 @@ export class AdventureHudScene extends Phaser.Scene {
 
   update(): void {
     const state = this.simulation.state;
-    this.levelName.setText(this.simulation.director.level.name);
+    this.levelName.setText(
+      `LEVEL ${state.levelIndex + 1}/${state.levelCount} · ${this.simulation.director.level.name}`,
+    );
     this.timer.setText(formatTime(state.remainingTicks));
+    const seconds = Math.ceil(state.remainingTicks / FIXED_HZ);
+    this.timer.setColor(seconds <= 30 ? "#ff668d" : seconds <= 60 ? "#ffd36a" : "#ffffff");
+    this.timer.setScale(
+      !state.reducedMotion && seconds <= 30
+        ? 1 + Math.abs(Math.sin(state.tick * 0.16)) * 0.08
+        : 1,
+    );
     this.progressFill.setScale(Math.max(0.002, this.simulation.getAscentProgress()), 1);
     this.checkpointText.setText(
       `CHECKPOINTS ${"◆".repeat(state.checkpointCount)}${"◇".repeat(Math.max(0, 3 - state.checkpointCount))}`,
@@ -109,13 +119,13 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createTopBar(): void {
     this.add
-      .rectangle(18, 16, LOGICAL_WIDTH - 36, 110, 0x041019, 0.94)
+      .rectangle(18, 14, LOGICAL_WIDTH - 36, 66, 0x041019, 0.86)
       .setOrigin(0)
       .setStrokeStyle(2, 0x2ccad1, 0.62)
       .setDepth(1);
 
     this.add
-      .text(36, 27, "NOEMA ASCENT", {
+      .text(34, 22, "NOEMA ASCENT", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontSize: "13px",
         fontStyle: "bold",
@@ -123,31 +133,45 @@ export class AdventureHudScene extends Phaser.Scene {
       })
       .setDepth(3);
 
-    this.levelName = this.add.text(36, 49, "", {
+    this.levelName = this.add.text(34, 47, "", {
       fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "17px",
+      fontSize: "14px",
       fontStyle: "bold",
       color: "#eafffb",
-    });
+    }).setDepth(5);
 
     this.timer = this.add
-      .text(LOGICAL_WIDTH - 36, 29, "04:30", {
+      .text(LOGICAL_WIDTH - 34, 22, "04:30", {
         fontFamily: "JetBrains Mono, Consolas, monospace",
-        fontSize: "29px",
+        fontSize: "31px",
         fontStyle: "bold",
         color: "#ffd36a",
       })
-      .setOrigin(1, 0);
+      .setOrigin(1, 0)
+      .setDepth(6);
 
-    this.add.rectangle(36, 94, 390, 11, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
+    this.add
+      .rectangle(18, 724, LOGICAL_WIDTH - 36, 66, 0x041019, 0.91)
+      .setOrigin(0)
+      .setStrokeStyle(2, 0x2ccad1, 0.52)
+      .setDepth(2);
+    this.add
+      .text(32, 733, "KAMPAGNENFORTSCHRITT", {
+        fontFamily: "Inter, Arial Black, sans-serif",
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#86b9c2",
+      })
+      .setDepth(4);
+    this.add.rectangle(32, 766, 410, 12, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
     this.progressFill = this.add
-      .rectangle(36, 94, 390, 11, 0x5dffe0, 1)
+      .rectangle(32, 766, 410, 12, 0x5dffe0, 1)
       .setOrigin(0, 0.5)
       .setDepth(3);
 
-    this.checkpointText = this.add.text(448, 84, "", {
+    this.checkpointText = this.add.text(466, 757, "", {
       fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "13px",
+      fontSize: "11px",
       fontStyle: "bold",
       color: "#8fc7cf",
     });
@@ -155,13 +179,13 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createGiftSlots(): void {
     this.add
-      .rectangle(18, 138, LOGICAL_WIDTH - 36, 126, 0x041019, 0.94)
+      .rectangle(18, 800, LOGICAL_WIDTH - 36, 142, 0x041019, 0.94)
       .setOrigin(0)
       .setStrokeStyle(2, 0x2ccad1, 0.48)
       .setDepth(2);
 
     this.add
-      .text(30, 145, "GESCHENKE", {
+      .text(30, 807, "GESCHENKE", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontSize: "11px",
         fontStyle: "bold",
@@ -172,16 +196,16 @@ export class AdventureHudScene extends Phaser.Scene {
     SLOT_DATA.forEach((slot, index) => {
       const x = 76 + index * 142;
       this.add
-        .rectangle(x, 208, 126, 92, 0x071924, 0.94)
+        .rectangle(x, 873, 126, 108, 0x071924, 0.94)
         .setStrokeStyle(2, slot.accent, slot.key === "galaxy" ? 0.92 : 0.62)
         .setDepth(3);
       this.add
-        .circle(x, 184, 31, slot.accent, 0.08)
+        .circle(x, 851, 31, slot.accent, 0.08)
         .setStrokeStyle(1, slot.accent, 0.2)
         .setDepth(3);
-      this.add.image(x, 184, ICON_KEYS[slot.key]).setDisplaySize(56, 56).setDepth(4);
+      this.add.image(x, 851, ICON_KEYS[slot.key]).setDisplaySize(58, 58).setDepth(4);
       this.add
-        .text(x, 218, slot.title, {
+        .text(x, 884, slot.title, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "10px",
           fontStyle: "bold",
@@ -190,7 +214,7 @@ export class AdventureHudScene extends Phaser.Scene {
         .setOrigin(0.5, 0)
         .setDepth(4);
       this.add
-        .text(x, 236, slot.label, {
+        .text(x, 906, slot.label, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "11px",
           fontStyle: "bold",
@@ -221,7 +245,7 @@ export class AdventureHudScene extends Phaser.Scene {
       wordWrap: { width: 178 },
     });
     this.prompt = this.add
-      .container(LOGICAL_WIDTH / 2, 500, [glow, plate, this.promptIcon, this.promptTitle, this.promptSub])
+      .container(LOGICAL_WIDTH - 185, 255, [glow, plate, this.promptIcon, this.promptTitle, this.promptSub])
       .setDepth(60)
       .setVisible(false);
   }
@@ -248,7 +272,7 @@ export class AdventureHudScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.routePanel = this.add
-      .container(LOGICAL_WIDTH - 185, 360, [plate, heading, this.routeText])
+      .container(LOGICAL_WIDTH - 185, 255, [plate, heading, this.routeText])
       .setDepth(62)
       .setVisible(false);
   }
@@ -268,7 +292,7 @@ export class AdventureHudScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.resultPanel = this.add
-      .container(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, [plate, this.resultText])
+      .container(LOGICAL_WIDTH / 2, 315, [plate, this.resultText])
       .setDepth(80)
       .setVisible(false);
   }
@@ -286,7 +310,7 @@ export class AdventureHudScene extends Phaser.Scene {
       lineSpacing: 3,
     });
     this.feedbackPanel = this.add
-      .container(LOGICAL_WIDTH / 2, 72, [plate, this.feedbackIcon, this.feedbackText])
+      .container(LOGICAL_WIDTH / 2, 124, [plate, this.feedbackIcon, this.feedbackText])
       .setDepth(70)
       .setVisible(false);
   }
@@ -314,7 +338,7 @@ export class AdventureHudScene extends Phaser.Scene {
     this.promptIcon.setTexture(ICON_KEYS[prompt.key]);
     this.promptTitle.setText(prompt.title);
     this.promptSub.setText(prompt.sub);
-    this.prompt.setPosition(LOGICAL_WIDTH - 185, 360).setVisible(true);
+    this.prompt.setPosition(LOGICAL_WIDTH - 185, 255).setVisible(true);
   }
 
   private updateRouteVote(): void {

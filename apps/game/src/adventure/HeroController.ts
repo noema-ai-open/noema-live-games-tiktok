@@ -139,6 +139,11 @@ export class HeroController {
     this.animation = "celebrate";
   }
 
+  celebrateLevel(): void {
+    this.machine.force("level_complete");
+    this.animation = "celebrate";
+  }
+
   fail(): void {
     this.machine.force("failure");
     this.animation = "scared";

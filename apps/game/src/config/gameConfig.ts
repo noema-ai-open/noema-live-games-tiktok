@@ -5,7 +5,7 @@ export const WORLD_GROUND_Y = 650;
 export const FIXED_HZ = 30;
 export const FIXED_STEP_MS = 1000 / FIXED_HZ;
 export const ROUND_DURATION_TICKS = FIXED_HZ * 270;
-export const LEVEL_VERSION = "adventure-beacon-v1";
+export const LEVEL_VERSION = "adventure-campaign-v2";
 export const DEFAULT_SEED = 0x4e4f454d;
 
 export const TICKS = {
@@ -15,6 +15,7 @@ export const TICKS = {
   rebuild: FIXED_HZ * 3,
   tsarCooldown: FIXED_HZ * 60,
   routeVote: FIXED_HZ * 10,
+  levelCelebration: FIXED_HZ * 4,
   successHold: FIXED_HZ * 12,
   failureHold: FIXED_HZ * 8,
 } as const;

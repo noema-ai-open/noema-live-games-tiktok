@@ -14,6 +14,12 @@ Absenderanzeige, Warnung, drei Sekunden Countdown, Fall, Einschlag und
 höchstens einmal und wird in Intro, Ergebnis, laufender Bombensequenz oder Safe
 Mode blockiert.
 
+Der Einschlag blendet hell auf, verdunkelt danach das Bild, zeigt eine
+Atombomben-Silhouette und erschüttert die Kamera. Anschließend startet die
+gesamte Kampagne wieder bei Level 1 mit 4:30. Abgeschlossene Level,
+Checkpoints und temporäre Bauten werden verworfen; Bridge-Verbindung,
+Geschenkmapping, Safe Mode und Reduced Motion bleiben erhalten.
+
 Likes füllen Team-Energie. Bei 100 Prozent gibt es eine kleine kostenlose
 passende Hilfe. Follows geben drei Sekunden Zeit; Shares geben größere
 Team-Energie. Keine freie Interaktion kann die ZAR-BOMBE auslösen.
