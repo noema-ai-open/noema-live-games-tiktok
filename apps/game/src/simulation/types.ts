@@ -1,10 +1,6 @@
 import type { OrderedGameCommand, ViewerIdentity } from "@noema/event-protocol";
-import type { Walker, WalkerState } from "./walker";
-
-export type { Walker, WalkerState };
-/** Alte Namen, damit bestehende Aufrufer lesbar bleiben. */
-export type Worker = Walker;
-export type WorkerState = WalkerState;
+import type { HeroGameState } from "../adventure/HeroStateMachine";
+import type { RouteChoice } from "../adventure/levelTypes";
 
 export type RoundStatus = "ready" | "running" | "paused" | "success" | "failure";
 export type TsarPhase = "idle" | "warning" | "descending" | "impact" | "recovery";
@@ -12,6 +8,7 @@ export type TsarPhase = "idle" | "warning" | "descending" | "impact" | "recovery
 export type TsarBombState = {
   phase: TsarPhase;
   actor: ViewerIdentity | null;
+  transactionId: string | null;
   startedTick: number;
   impactTick: number;
   recoveryUntilTick: number;
@@ -24,18 +21,14 @@ export type SimulationState = {
   tick: number;
   remainingTicks: number;
   roundStatus: RoundStatus;
-  /** Laedt sich durch Likes, Follows und Shares und schaltet dann selbst frei. */
+  heroState: HeroGameState;
+  segmentId: string;
   teamEnergy: number;
-  rescuedCount: number;
-  lostCount: number;
+  checkpointCount: number;
   safeMode: boolean;
   reducedMotion: boolean;
-  /** Solange gesetzt, faehrt der Lift doppelt so schnell. */
-  liftOverdriveUntilTick: number;
-  shieldUntilTick: number;
-  environmentUntilTick: number;
-  environmentMode: "none" | "wind" | "low_gravity";
-  recoveryMultiplier: number;
+  chosenRoute: RouteChoice | null;
+  lastContributor: ViewerIdentity | null;
   tsarBomb: TsarBombState;
   eventFeed: string[];
 };
