@@ -4,6 +4,8 @@ export type RoundDirectorOptions = {
   enabled: boolean;
   /** Wie lange das Ergebnis stehen bleibt, bevor die naechste Runde startet. */
   delaySeconds: number;
+  successDelaySeconds?: number;
+  failureDelaySeconds?: number;
   /** Wird beim Neustart gerufen, damit Aufrufer aufraeumen koennen. */
   onRestart?: (seed: number) => void;
 };
@@ -64,7 +66,11 @@ export class RoundDirector {
     }
 
     if (this.restartAt === null) {
-      this.restartAt = now + this.options.delaySeconds * 1000;
+      const delay =
+        status === "success"
+          ? (this.options.successDelaySeconds ?? this.options.delaySeconds)
+          : (this.options.failureDelaySeconds ?? this.options.delaySeconds);
+      this.restartAt = now + delay * 1000;
       return;
     }
     if (now < this.restartAt) return;
