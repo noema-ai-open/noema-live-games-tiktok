@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { ROUND_DURATION_TICKS } from "../src/config/gameConfig";
 import { Simulation } from "../src/simulation/Simulation";
+import { createAdventureCampaign } from "../src/adventure/levelTemplates";
 
 function advanceUntil(
   simulation: Simulation,
@@ -59,7 +61,13 @@ describe("AdventureSimulation", () => {
     const simulation = new Simulation(4);
     simulation.startRound();
     let voteSent = false;
+    let lastLevelIndex = simulation.state.levelIndex;
+    const remainingTicksAfterLevelSwitch: number[] = [];
     for (let index = 0; index < 12_000 && simulation.state.roundStatus === "running"; index += 1) {
+      if (simulation.state.levelIndex !== lastLevelIndex) {
+        lastLevelIndex = simulation.state.levelIndex;
+        remainingTicksAfterLevelSwitch.push(simulation.state.remainingTicks);
+      }
       if (simulation.state.heroState === "blocked") {
         const type = simulation.director.current.type;
         if (type === "small_gap") {
@@ -87,6 +95,51 @@ describe("AdventureSimulation", () => {
     expect(simulation.state.eventFeed).toContain(
       "GIPFEL ERREICHT // LEUCHTFEUER AKTIVIERT",
     );
+    // A level switch must not silently carry over the previous level's
+    // remaining time: every new level starts with its own full timer.
+    expect(remainingTicksAfterLevelSwitch).toHaveLength(2);
+    for (const remaining of remainingTicksAfterLevelSwitch) {
+      expect(remaining).toBe(ROUND_DURATION_TICKS);
+    }
+  });
+
+  it("gives each of the three regions its own distinct segments and palette", () => {
+    const [beacon, cavern, storm] = createAdventureCampaign();
+    const levels = [beacon!, cavern!, storm!];
+
+    const regions = new Set(levels.map((level) => level.region));
+    const celebrations = new Set(levels.map((level) => level.celebration));
+    expect(regions.size).toBe(3);
+    expect(celebrations.size).toBe(3);
+
+    for (const level of levels) {
+      expect(level.segments.length).toBeGreaterThanOrEqual(10);
+      const themes = new Set(level.segments.map((segment) => segment.visualTheme));
+      expect(themes.size).toBeGreaterThanOrEqual(2);
+    }
+
+    const themesByLevel = levels.map(
+      (level) => new Set(level.segments.map((segment) => segment.visualTheme)),
+    );
+    expect(themesByLevel[0]).not.toEqual(themesByLevel[1]);
+    expect(themesByLevel[1]).not.toEqual(themesByLevel[2]);
+    expect(themesByLevel[0]).not.toEqual(themesByLevel[2]);
+  });
+
+  it("keeps all three levels deterministic and playable offline for a fixed seed", () => {
+    const first = createAdventureCampaign(777);
+    const second = createAdventureCampaign(777);
+    expect(first).toEqual(second);
+
+    for (const level of first) {
+      expect(level.segments[0]!.startX).toBeGreaterThanOrEqual(0);
+      expect(level.segments.at(-1)!.type).toBe("finish");
+      for (const segment of level.segments) {
+        for (const nextId of segment.next) {
+          expect(level.segments.some((candidate) => candidate.id === nextId)).toBe(true);
+        }
+      }
+    }
   });
 
   it("fails cleanly when the round timer expires", () => {
