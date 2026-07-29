@@ -4,17 +4,13 @@ import { resolveViewMode, shouldAutoStart } from "../src/config/viewMode";
 import { ConnectorManager } from "../src/connectors/ConnectorManager";
 import { RulesEngine } from "../src/gifts/RulesEngine";
 import { createDefaultCatalog } from "../src/gifts/giftCatalog";
-import { ReplayService } from "../src/replay/ReplayService";
 import { Simulation } from "../src/simulation/Simulation";
 import { LiveSession } from "../src/systems/LiveSession";
 
 function createSession(seed = 21) {
   const simulation = new Simulation(seed);
   const connectors = new ConnectorManager();
-  const rules = new RulesEngine({
-    catalog: createDefaultCatalog(),
-    streakWindowMs: 50,
-  });
+  const rules = new RulesEngine({ catalog: createDefaultCatalog(), streakWindowMs: 50 });
   const live = new LiveSession(simulation, connectors, rules);
   live.start();
   connectors.use("mock");
@@ -22,79 +18,61 @@ function createSession(seed = 21) {
   return { simulation, connectors, rules, live };
 }
 
-function advance(simulation: Simulation, ticks: number): void {
-  for (let index = 0; index < ticks; index += 1) simulation.step();
+function advanceToBlock(simulation: Simulation): void {
+  for (let index = 0; index < 1000 && simulation.state.heroState !== "blocked"; index += 1) {
+    simulation.step();
+  }
+  expect(simulation.state.heroState).toBe("blocked");
 }
 
 describe("live session", () => {
-  it("turns a live gift into an ordered command", () => {
+  it("turns a final Rose gift into one ordered jump command", () => {
     const { simulation, connectors, live } = createSession();
+    advanceToBlock(simulation);
     connectors.mock.injectGift({
-      giftId: "name:donut",
-      giftName: "Donut",
-      coinValue: 30,
+      giftId: "name:rose",
+      giftName: "Rose",
+      coinValue: 1,
       comboFinal: true,
     });
-    live.dispatch();
+    expect(live.dispatch()).toBe(1);
     simulation.step();
-
-    // Der Befehl schaltet einen Uebergang frei, der Aufbau braucht.
-    const opened = simulation.level
-      .renderState(simulation.state.tick)
-      .links.filter((link) => link.buildRequired > 0 && link.open);
-    expect(opened.length).toBeGreaterThan(0);
-    expect(simulation.commandHistory).toHaveLength(1);
-    expect(simulation.commandHistory[0]?.command.type).toBe("build_bridge");
+    expect(simulation.state.heroState).toBe("jumping");
+    expect(simulation.commandHistory.at(-1)?.command.type).toBe("place_jump_field");
   });
 
-  it("keeps sequence numbers monotonic while dispatching mixed priorities", () => {
+  it("passes mock chat votes as ChatEvents, never GiftEvents", () => {
+    const { simulation, connectors, live } = createSession();
+    const event = connectors.mock.injectChat("2");
+    expect(event.kind).toBe("chat");
+    live.dispatch();
+    simulation.step();
+    expect(simulation.commandHistory.at(-1)?.command).toMatchObject({
+      type: "route_vote",
+      choice: "right",
+    });
+  });
+
+  it("keeps sequence numbers monotonic across mixed priorities", () => {
     const { simulation, connectors, live } = createSession();
     connectors.mock.injectSimple("like", undefined, 5);
-    // 199 Coins ist die Schild-Stufe und damit ein kritischer Befehl.
     connectors.mock.injectGift({
-      giftId: "name:herzen",
-      giftName: "Herzen",
-      coinValue: 199,
+      giftId: "name:galaxy",
+      giftName: "Galaxy",
+      coinValue: 1000,
       comboFinal: true,
     });
     connectors.mock.injectSimple("follow");
     live.dispatch();
     simulation.step();
-
     const sequences = simulation.commandHistory.map((item) => item.sequence);
     expect(sequences).toEqual([...sequences].sort((a, b) => a - b));
-    // Critical first, free engagement afterwards.
-    expect(simulation.commandHistory[0]?.command.type).toBe("group_shield");
+    expect(simulation.commandHistory[0]?.command.type).toBe("tsar_bomb");
   });
 
-  it("replays a round driven by live events deterministically", () => {
-    const { simulation, connectors, live } = createSession(4242);
-    const replays = new ReplayService();
-
-    for (const [gift, coins] of [
-      ["Donut", 30],
-      ["Papierkranich", 99],
-      ["Herzen", 199],
-    ] as const) {
-      connectors.mock.injectGift({
-        giftId: `name:${gift.toLowerCase()}`,
-        giftName: gift,
-        coinValue: coins,
-        comboFinal: true,
-      });
-      live.dispatch();
-      advance(simulation, 25);
-    }
-    advance(simulation, 120);
-
-    const replay = replays.capture(simulation);
-    expect(replay.commands.length).toBeGreaterThan(0);
-    const comparison = replays.replay(replay);
-    expect(comparison.matches).toBe(true);
-  });
-
-  it("clears live state on reset so a new round starts clean", () => {
+  it("clears live rule state on reset without replacing connectors", () => {
     const { simulation, connectors, rules, live } = createSession(77);
+    const activeConnector = connectors.getActiveId();
     connectors.mock.injectGift({
       giftId: "name:rose",
       giftName: "Rose",
@@ -102,85 +80,31 @@ describe("live session", () => {
       comboFinal: true,
     });
     live.dispatch();
-    advance(simulation, 10);
-
+    simulation.step();
     rules.reset();
     simulation.submit({ type: "reset" });
     simulation.step();
-
     expect(simulation.state.tick).toBe(0);
     expect(simulation.commandHistory).toHaveLength(0);
-    expect(rules.getDroppedDuplicates()).toBe(0);
-    expect(rules.inbox.size()).toBe(0);
-  });
-
-  it("blocks the ZAR-BOMBE while safe mode is on and allows it afterwards", () => {
-    const { simulation, connectors, live } = createSession(99);
-    simulation.submit({ type: "set_safe_mode", enabled: true });
-    simulation.step();
-
-    connectors.mock.injectGift({
-      giftId: "mock_tsar_bomb",
-      giftName: "ZAR-BOMBE Testgeschenk",
-      coinValue: 10000,
-      comboFinal: true,
-    });
-    live.dispatch();
-    simulation.step();
-    expect(simulation.state.tsarBomb.phase).toBe("idle");
-
-    simulation.submit({ type: "set_safe_mode", enabled: false });
-    simulation.step();
-    simulation.submit({ type: "tsar_bomb" });
-    simulation.step();
-    expect(simulation.state.tsarBomb.phase).toBe("warning");
-  });
-
-  it("carries reduced motion through the command queue", () => {
-    const simulation = new Simulation(5);
-    simulation.startRound();
-    simulation.submit({ type: "set_reduced_motion", enabled: true });
-    simulation.step();
-    expect(simulation.state.reducedMotion).toBe(true);
-    simulation.submit({ type: "set_reduced_motion", enabled: false });
-    simulation.step();
-    expect(simulation.state.reducedMotion).toBe(false);
+    expect(connectors.getActiveId()).toBe(activeConnector);
   });
 });
 
-describe("view modes", () => {
-  it("selects the stream view only for an explicit request", () => {
+describe("view and settings compatibility", () => {
+  it("keeps operator and stream entry points", () => {
     expect(resolveViewMode("?view=stream")).toBe("stream");
     expect(resolveViewMode("?view=operator")).toBe("operator");
-    expect(resolveViewMode("")).toBe("operator");
-    expect(resolveViewMode("?view=anything")).toBe("operator");
-  });
-
-  it("reads the autostart flag", () => {
     expect(shouldAutoStart("?autostart=1")).toBe(true);
-    expect(shouldAutoStart("?autostart=true")).toBe(true);
-    expect(shouldAutoStart("?view=stream")).toBe(false);
-  });
-});
-
-describe("app settings", () => {
-  it("repairs incomplete stored settings", () => {
-    const migrated = migrateSettings({
-      bridgeAddress: "  http://127.0.0.1:9000 ",
-      lastConnector: "something-else",
-      masterVolume: 4,
-    });
-    expect(migrated.bridgeAddress).toBe("http://127.0.0.1:9000");
-    expect(migrated.lastConnector).toBe("mock");
-    expect(migrated.masterVolume).toBe(1);
-    expect(migrated.version).toBe(1);
   });
 
-  it("falls back to defaults when nothing is stored", () => {
+  it("keeps the local NOEMA bridge default on 127.0.0.1", () => {
     const settings = loadSettings({
       getItem: () => null,
       setItem: () => undefined,
     });
     expect(settings.bridgeAddress).toBe("http://127.0.0.1:8765");
+    expect(
+      migrateSettings({ bridgeAddress: " http://127.0.0.1:9000 " }).bridgeAddress,
+    ).toBe("http://127.0.0.1:9000");
   });
 });

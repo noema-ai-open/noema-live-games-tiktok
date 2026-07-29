@@ -3,28 +3,16 @@ import { ReplayService } from "../src/replay/ReplayService";
 import { Simulation } from "../src/simulation/Simulation";
 
 describe("ReplayService", () => {
-  it("reproduces the same deterministic final result", () => {
-    const simulation = new Simulation(20260727);
+  it("reproduces the same seeded adventure state", () => {
+    const simulation = new Simulation(20260729);
     simulation.startRound();
-    // Eine aktive Zuschauerschaft nachstellen: regelmaessig Aufbau schicken,
-    // damit die Uebergaenge aufgehen und Roboter oben ankommen.
-    while (simulation.state.roundStatus === "running") {
-      if (simulation.state.tick % 120 === 0) {
-        simulation.submit({ type: "repair_structure", amount: 20 });
-      }
-      if (simulation.state.tick % 900 === 300) {
-        simulation.submit({ type: "activate_lift", durationTicks: 600 });
-      }
-      simulation.step();
-    }
+    while (simulation.state.heroState !== "blocked") simulation.step();
+    simulation.submit({ type: "place_jump_field", zoneId: "current", durationTicks: 24 });
+    for (let index = 0; index < 90; index += 1) simulation.step();
 
-    const replayService = new ReplayService();
-    const replay = replayService.capture(simulation);
-    const comparison = replayService.replay(replay);
-
-    // Dieser Test prueft Determinismus, nicht die Balance: Die Zahl der
-    // Geretteten haengt am Tempo und darf sich beim Ausbalancieren aendern.
-    expect(replay.expectedResult.rescued).toBeGreaterThan(0);
+    const service = new ReplayService();
+    const replay = service.capture(simulation);
+    const comparison = service.replay(replay);
     expect(comparison.matches).toBe(true);
     expect(comparison.result).toEqual(replay.expectedResult);
   });
