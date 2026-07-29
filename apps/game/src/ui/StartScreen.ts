@@ -140,7 +140,7 @@ export class StartScreen {
       <div class="start-card">
         <p class="start-eyebrow">NOEMA LIVE GAMES</p>
         <h1 class="start-title">NOEMA Ascent</h1>
-        <p class="start-subtitle">Interactive LIVE Rescue Game</p>
+        <p class="start-subtitle">Interaktiver LIVE Adventure Runner</p>
         <div class="start-actions">
           <button class="start-button primary" data-nav="offline">Offline testen</button>
           <button class="start-button" data-nav="bridge">Live Bridge verbinden</button>
@@ -190,8 +190,8 @@ export class StartScreen {
         <h2 class="start-heading">Über das Projekt</h2>
         <p class="start-paragraph">
           NOEMA Ascent ist ein interaktives Spiel für TikTok-LIVE-Streams.
-          Zuschauer helfen einem Team kleiner Roboter beim Aufstieg durch eine
-          beschädigte Megastruktur — mit Likes und Geschenken.
+          Zuschauer helfen NURI auf dem Weg zum Himmelsleuchtfeuer. Geschenke
+          lösen sichtbare Aktionen aus; der Chat entscheidet an Abzweigungen.
         </p>
         <p class="start-paragraph">
           Alle Ereignisse werden lokal verarbeitet. Es gibt kein Benutzerkonto,
