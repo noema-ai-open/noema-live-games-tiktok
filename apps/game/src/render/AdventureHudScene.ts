@@ -17,14 +17,25 @@ const ICON_KEYS: Readonly<Record<GiftAssetKey, string>> = {
   galaxy: "gift-galaxy",
 };
 
-const SLOT_DATA: readonly { key: GiftAssetKey; title: string; label: string }[] = [
-  { key: "rose", title: "ROSE", label: "SPRINGEN" },
-  { key: "doughnut", title: "DOUGHNUT", label: "3 BAUTEILE" },
-  { key: "hand-heart", title: "HAND HEART", label: "BRÜCKE" },
-  { key: "corgi", title: "CORGI", label: "HELFER" },
-  { key: "galaxy", title: "GALAXY", label: "ZAR-BOMBE" },
+const SLOT_DATA: readonly {
+  key: GiftAssetKey;
+  title: string;
+  label: string;
+  accent: number;
+}[] = [
+  { key: "rose", title: "ROSE", label: "SPRINGEN", accent: 0xff6aa9 },
+  { key: "doughnut", title: "DOUGHNUT", label: "3 BAUTEILE", accent: 0xff86c8 },
+  { key: "hand-heart", title: "HAND HEART", label: "BRÜCKE", accent: 0xffbe63 },
+  { key: "corgi", title: "CORGI", label: "HELFER", accent: 0x67ef9b },
+  { key: "galaxy", title: "GALAXY", label: "ZAR-BOMBE", accent: 0xb979ff },
 ];
 
+/**
+ * Stream-safe HUD for the 720x960 block below the camera image.
+ *
+ * Important controls live in the upper half of the game block. The lower edge
+ * remains deliberately quiet because TikTok may place chat and captions there.
+ */
 export class AdventureHudScene extends Phaser.Scene {
   private levelName!: Phaser.GameObjects.Text;
   private timer!: Phaser.GameObjects.Text;
@@ -69,6 +80,14 @@ export class AdventureHudScene extends Phaser.Scene {
     this.createRoutePanel();
     this.createResultPanel();
     this.createFeedbackPanel();
+    this.add
+      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 18, "Powered by NOEMA AI", {
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "11px",
+        color: "#6f9ba5",
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(4);
     this.unsubscribe = this.feedback.subscribe((payload) => this.showFeedback(payload));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsubscribe?.());
   }
@@ -90,58 +109,90 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createTopBar(): void {
     this.add
-      .rectangle(18, 18, LOGICAL_WIDTH - 36, 112, 0x06131d, 0.92)
+      .rectangle(18, 16, LOGICAL_WIDTH - 36, 110, 0x041019, 0.94)
       .setOrigin(0)
-      .setStrokeStyle(2, 0x2ccad1, 0.55)
+      .setStrokeStyle(2, 0x2ccad1, 0.62)
       .setDepth(1);
-    this.levelName = this.add.text(36, 34, "", {
+
+    this.add
+      .text(36, 27, "NOEMA ASCENT", {
+        fontFamily: "Inter, Arial Black, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
+        color: "#65f4df",
+      })
+      .setDepth(3);
+
+    this.levelName = this.add.text(36, 49, "", {
       fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "18px",
+      fontSize: "17px",
       fontStyle: "bold",
       color: "#eafffb",
     });
+
     this.timer = this.add
-      .text(LOGICAL_WIDTH - 36, 31, "04:30", {
+      .text(LOGICAL_WIDTH - 36, 29, "04:30", {
         fontFamily: "JetBrains Mono, Consolas, monospace",
-        fontSize: "27px",
+        fontSize: "29px",
         fontStyle: "bold",
         color: "#ffd36a",
       })
       .setOrigin(1, 0);
-    this.add.rectangle(36, 92, 410, 10, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
+
+    this.add.rectangle(36, 94, 390, 11, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
     this.progressFill = this.add
-      .rectangle(36, 92, 410, 10, 0x5dffe0, 1)
+      .rectangle(36, 94, 390, 11, 0x5dffe0, 1)
       .setOrigin(0, 0.5)
       .setDepth(3);
-    this.checkpointText = this.add.text(470, 82, "", {
+
+    this.checkpointText = this.add.text(448, 84, "", {
       fontFamily: "Inter, Arial, sans-serif",
       fontSize: "13px",
+      fontStyle: "bold",
       color: "#8fc7cf",
     });
   }
 
   private createGiftSlots(): void {
     this.add
-      .rectangle(18, LOGICAL_HEIGHT - 146, LOGICAL_WIDTH - 36, 128, 0x06131d, 0.94)
+      .rectangle(18, 138, LOGICAL_WIDTH - 36, 126, 0x041019, 0.94)
       .setOrigin(0)
-      .setStrokeStyle(2, 0x2ccad1, 0.45)
+      .setStrokeStyle(2, 0x2ccad1, 0.48)
       .setDepth(2);
+
+    this.add
+      .text(30, 145, "GESCHENKE", {
+        fontFamily: "Inter, Arial Black, sans-serif",
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#86b9c2",
+      })
+      .setDepth(4);
+
     SLOT_DATA.forEach((slot, index) => {
-      const x = 88 + index * 136;
-      this.add.image(x, LOGICAL_HEIGHT - 96, ICON_KEYS[slot.key]).setDisplaySize(64, 64).setDepth(4);
+      const x = 76 + index * 142;
       this.add
-        .text(x, LOGICAL_HEIGHT - 56, slot.title, {
+        .rectangle(x, 208, 126, 92, 0x071924, 0.94)
+        .setStrokeStyle(2, slot.accent, slot.key === "galaxy" ? 0.92 : 0.62)
+        .setDepth(3);
+      this.add
+        .circle(x, 184, 31, slot.accent, 0.08)
+        .setStrokeStyle(1, slot.accent, 0.2)
+        .setDepth(3);
+      this.add.image(x, 184, ICON_KEYS[slot.key]).setDisplaySize(56, 56).setDepth(4);
+      this.add
+        .text(x, 218, slot.title, {
           fontFamily: "Inter, Arial, sans-serif",
-          fontSize: "11px",
+          fontSize: "10px",
           fontStyle: "bold",
           color: "#ffffff",
         })
         .setOrigin(0.5, 0)
         .setDepth(4);
       this.add
-        .text(x, LOGICAL_HEIGHT - 38, slot.label, {
+        .text(x, 236, slot.label, {
           fontFamily: "Inter, Arial, sans-serif",
-          fontSize: "12px",
+          fontSize: "11px",
           fontStyle: "bold",
           color: slot.key === "galaxy" ? "#ff7ca7" : "#65f4df",
         })
@@ -151,29 +202,34 @@ export class AdventureHudScene extends Phaser.Scene {
   }
 
   private createObstaclePrompt(): void {
-    const plate = this.add.rectangle(0, 0, 330, 158, 0x071924, 0.96).setStrokeStyle(4, 0x5dffe0, 0.9);
-    this.promptIcon = this.add.image(-102, 0, ICON_KEYS.rose).setDisplaySize(104, 104);
-    this.promptTitle = this.add.text(-30, -47, "", {
+    const glow = this.add.rectangle(0, 0, 358, 176, 0x42e8dc, 0.08);
+    const plate = this.add
+      .rectangle(0, 0, 342, 160, 0x05131d, 0.97)
+      .setStrokeStyle(4, 0x5dffe0, 0.94);
+    this.promptIcon = this.add.image(-105, 0, ICON_KEYS.rose).setDisplaySize(108, 108);
+    this.promptTitle = this.add.text(-32, -48, "", {
       fontFamily: "Inter, Arial Black, sans-serif",
-      fontSize: "21px",
+      fontSize: "22px",
       fontStyle: "bold",
       color: "#ffffff",
     });
-    this.promptSub = this.add.text(-30, -8, "", {
+    this.promptSub = this.add.text(-32, -8, "", {
       fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "17px",
+      fontSize: "18px",
       fontStyle: "bold",
       color: "#65f4df",
-      wordWrap: { width: 170 },
+      wordWrap: { width: 178 },
     });
     this.prompt = this.add
-      .container(LOGICAL_WIDTH / 2, 470, [plate, this.promptIcon, this.promptTitle, this.promptSub])
+      .container(LOGICAL_WIDTH / 2, 500, [glow, plate, this.promptIcon, this.promptTitle, this.promptSub])
       .setDepth(60)
       .setVisible(false);
   }
 
   private createRoutePanel(): void {
-    const plate = this.add.rectangle(0, 0, 650, 210, 0x071924, 0.96).setStrokeStyle(4, 0xffd36a, 0.85);
+    const plate = this.add
+      .rectangle(0, 0, 650, 210, 0x05131d, 0.97)
+      .setStrokeStyle(4, 0xffd36a, 0.9);
     const heading = this.add
       .text(0, -70, "CHAT ENTSCHEIDET · 10 SEKUNDEN", {
         fontFamily: "Inter, Arial Black, sans-serif",
@@ -192,13 +248,15 @@ export class AdventureHudScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.routePanel = this.add
-      .container(LOGICAL_WIDTH / 2, 400, [plate, heading, this.routeText])
+      .container(LOGICAL_WIDTH / 2, 470, [plate, heading, this.routeText])
       .setDepth(62)
       .setVisible(false);
   }
 
   private createResultPanel(): void {
-    const plate = this.add.rectangle(0, 0, 650, 340, 0x06131d, 0.97).setStrokeStyle(5, 0x5dffe0, 0.9);
+    const plate = this.add
+      .rectangle(0, 0, 650, 340, 0x041019, 0.98)
+      .setStrokeStyle(5, 0x5dffe0, 0.92);
     this.resultText = this.add
       .text(0, 0, "", {
         fontFamily: "Inter, Arial Black, sans-serif",
@@ -216,7 +274,9 @@ export class AdventureHudScene extends Phaser.Scene {
   }
 
   private createFeedbackPanel(): void {
-    const plate = this.add.rectangle(0, 0, 610, 118, 0x071924, 0.96).setStrokeStyle(3, 0x5dffe0, 0.8);
+    const plate = this.add
+      .rectangle(0, 0, 610, 118, 0x05131d, 0.97)
+      .setStrokeStyle(3, 0x5dffe0, 0.84);
     this.feedbackIcon = this.add.image(-242, 0, ICON_KEYS.rose).setDisplaySize(84, 84);
     this.feedbackText = this.add.text(-182, -38, "", {
       fontFamily: "Inter, Arial, sans-serif",
@@ -226,7 +286,7 @@ export class AdventureHudScene extends Phaser.Scene {
       lineSpacing: 6,
     });
     this.feedbackPanel = this.add
-      .container(LOGICAL_WIDTH / 2, 205, [plate, this.feedbackIcon, this.feedbackText])
+      .container(LOGICAL_WIDTH / 2, 328, [plate, this.feedbackIcon, this.feedbackText])
       .setDepth(70)
       .setVisible(false);
   }
@@ -251,10 +311,10 @@ export class AdventureHudScene extends Phaser.Scene {
     const camera = this.scene.get("AdventureScene").cameras.main;
     const x = Phaser.Math.Clamp(
       ((segment.waitX ?? this.simulation.hero.x) - camera.scrollX) * camera.zoom + 150,
-      178,
-      LOGICAL_WIDTH - 178,
+      185,
+      LOGICAL_WIDTH - 185,
     );
-    const y = Phaser.Math.Clamp(segment.groundY * camera.zoom - 175, 310, 610);
+    const y = Phaser.Math.Clamp(segment.groundY * camera.zoom - 155, 390, 650);
     this.prompt.setPosition(x, y).setVisible(true);
   }
 
@@ -262,7 +322,10 @@ export class AdventureHudScene extends Phaser.Scene {
     const vote = this.simulation.routeVote.state;
     this.routePanel.setVisible(vote.active);
     if (!vote.active) return;
-    const seconds = Math.max(0, Math.ceil((vote.endsTick - this.simulation.state.tick) / FIXED_HZ));
+    const seconds = Math.max(
+      0,
+      Math.ceil((vote.endsTick - this.simulation.state.tick) / FIXED_HZ),
+    );
     this.routeText.setText(`1 · LINKS   ${vote.left}\n2 · RECHTS  ${vote.right}\n${seconds}s`);
   }
 
@@ -272,12 +335,19 @@ export class AdventureHudScene extends Phaser.Scene {
     this.resultPanel.setVisible(terminal);
     if (!terminal) return;
     if (state.roundStatus === "success") {
-      const contributor = state.lastContributor?.displayName ?? state.lastContributor?.username ?? "TEAM NOEMA";
+      const contributor =
+        state.lastContributor?.displayName ??
+        state.lastContributor?.username ??
+        "TEAM NOEMA";
       this.resultText
-        .setText(`GIPFEL ERREICHT\nLEUCHTFEUER AKTIVIERT\n\nLETZTE HILFE:\n${contributor.toUpperCase()}`)
+        .setText(
+          `GIPFEL ERREICHT\nLEUCHTFEUER AKTIVIERT\n\nLETZTE HILFE:\n${contributor.toUpperCase()}`,
+        )
         .setColor("#7ffff0");
     } else {
-      this.resultText.setText("ZEIT ABGELAUFEN\n\nDER GIPFEL WARTET").setColor("#ffb3c5");
+      this.resultText
+        .setText("ZEIT ABGELAUFEN\n\nDER GIPFEL WARTET")
+        .setColor("#ffb3c5");
     }
   }
 
@@ -312,16 +382,32 @@ function promptFor(
   required: number,
 ): { key: GiftAssetKey; title: string; sub: string } | null {
   if (type === "small_gap") return { key: "rose", title: "ROSE", sub: "1× SPRINGEN" };
-  if (type === "high_ledge") return { key: "doughnut", title: "DOUGHNUT", sub: "3 STEINE" };
+  if (type === "high_ledge") {
+    return { key: "doughnut", title: "DOUGHNUT", sub: "3 STEINE" };
+  }
   if (type === "broken_bridge") {
-    return { key: "doughnut", title: "DOUGHNUT", sub: `${required - built} BRÜCKENTEILE` };
+    return {
+      key: "doughnut",
+      title: "DOUGHNUT",
+      sub: `${required - built} BRÜCKENTEILE`,
+    };
   }
   if (type === "ravine") {
     return built === 0
-      ? { key: "hand-heart", title: "HAND HEART", sub: "BRÜCKE BAUEN\nODER DOUGHNUT ×2" }
-      : { key: "doughnut", title: "DOUGHNUT", sub: `${required - built} TEILE FEHLEN` };
+      ? {
+          key: "hand-heart",
+          title: "HAND HEART",
+          sub: "BRÜCKE BAUEN\nODER DOUGHNUT ×2",
+        }
+      : {
+          key: "doughnut",
+          title: "DOUGHNUT",
+          sub: `${required - built} TEILE FEHLEN`,
+        };
   }
-  if (type === "repair_gate") return { key: "corgi", title: "CORGI", sub: "TOR REPARIEREN" };
+  if (type === "repair_gate") {
+    return { key: "corgi", title: "CORGI", sub: "TOR REPARIEREN" };
+  }
   return null;
 }
 
