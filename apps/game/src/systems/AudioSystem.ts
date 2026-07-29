@@ -1,17 +1,18 @@
 export type AudioCue =
   | "gift"
+  | "footsteps"
   | "support"
   | "repair"
   | "bridge"
+  | "bridge_segment"
+  | "build_block"
   | "jump"
-  | "lift"
-  | "shield"
-  | "rescue"
+  | "land"
+  | "helper_arrive"
   | "checkpoint"
-  | "earthquake"
-  | "warning"
-  | "countdown"
-  | "explosion"
+  | "route_vote"
+  | "bomb_warning"
+  | "bomb_impact"
   | "rebuild"
   | "success"
   | "failure";
@@ -38,18 +39,19 @@ type CueSpec = {
  */
 const CUES: Record<AudioCue, CueSpec> = {
   gift: { channel: "effects", type: "triangle", from: 780, to: 1180, durationSeconds: 0.14, gain: 0.05, harmonic: 1.5 },
+  footsteps: { channel: "effects", type: "sine", from: 120, to: 90, durationSeconds: 0.08, gain: 0.022 },
   support: { channel: "effects", type: "sine", from: 620, to: 880, durationSeconds: 0.16, gain: 0.05 },
   repair: { channel: "effects", type: "sine", from: 520, to: 900, durationSeconds: 0.22, gain: 0.05, harmonic: 2 },
   bridge: { channel: "effects", type: "square", from: 240, to: 480, durationSeconds: 0.3, gain: 0.045, harmonic: 1.5 },
+  bridge_segment: { channel: "effects", type: "square", from: 260, to: 520, durationSeconds: 0.25, gain: 0.045, harmonic: 1.5 },
+  build_block: { channel: "effects", type: "triangle", from: 300, to: 700, durationSeconds: 0.2, gain: 0.045 },
   jump: { channel: "effects", type: "triangle", from: 380, to: 1020, durationSeconds: 0.18, gain: 0.05 },
-  lift: { channel: "effects", type: "sawtooth", from: 180, to: 420, durationSeconds: 0.34, gain: 0.04 },
-  shield: { channel: "effects", type: "sine", from: 300, to: 760, durationSeconds: 0.42, gain: 0.055, harmonic: 1.5 },
-  rescue: { channel: "effects", type: "sine", from: 720, to: 1160, durationSeconds: 0.2, gain: 0.05, harmonic: 1.5 },
+  land: { channel: "effects", type: "sine", from: 180, to: 80, durationSeconds: 0.16, gain: 0.05, noise: 0.15 },
+  helper_arrive: { channel: "effects", type: "triangle", from: 560, to: 1040, durationSeconds: 0.24, gain: 0.05, harmonic: 1.5 },
   checkpoint: { channel: "effects", type: "triangle", from: 660, to: 990, durationSeconds: 0.24, gain: 0.05 },
-  earthquake: { channel: "warnings", type: "sawtooth", from: 90, to: 42, durationSeconds: 0.7, gain: 0.07, noise: 0.5 },
-  warning: { channel: "warnings", type: "square", from: 420, to: 200, durationSeconds: 0.55, gain: 0.06 },
-  countdown: { channel: "warnings", type: "square", from: 300, to: 300, durationSeconds: 0.12, gain: 0.06 },
-  explosion: { channel: "warnings", type: "sawtooth", from: 140, to: 30, durationSeconds: 1.2, gain: 0.11, noise: 1 },
+  route_vote: { channel: "effects", type: "sine", from: 440, to: 660, durationSeconds: 0.2, gain: 0.04 },
+  bomb_warning: { channel: "warnings", type: "square", from: 420, to: 190, durationSeconds: 0.55, gain: 0.06 },
+  bomb_impact: { channel: "warnings", type: "sawtooth", from: 150, to: 30, durationSeconds: 1, gain: 0.1, noise: 1 },
   rebuild: { channel: "effects", type: "sine", from: 340, to: 720, durationSeconds: 0.5, gain: 0.05, harmonic: 1.5 },
   success: { channel: "effects", type: "triangle", from: 620, to: 1240, durationSeconds: 0.6, gain: 0.06, harmonic: 1.25 },
   failure: { channel: "warnings", type: "sine", from: 260, to: 110, durationSeconds: 0.55, gain: 0.05 },

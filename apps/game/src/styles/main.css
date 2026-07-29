@@ -61,7 +61,10 @@ body {
 
 .game-frame canvas {
   display: block;
+  width: auto;
+  max-width: 100%;
   max-height: calc(100vh - 60px);
+  aspect-ratio: 3 / 4;
   border-radius: 8px;
 }
 
@@ -81,6 +84,8 @@ body {
 }
 
 .stream-layout .game-frame canvas {
+  width: auto;
+  max-width: 100vw;
   max-height: 100vh;
   border-radius: 0;
 }

@@ -10,9 +10,9 @@ import { ConnectorManager } from "./connectors/ConnectorManager";
 import type { ConnectionSnapshot } from "./connectors/connectionTypes";
 import { loadCatalog, saveCatalog } from "./gifts/giftCatalog";
 import { RulesEngine } from "./gifts/RulesEngine";
+import { AdventureScene } from "./render/AdventureScene";
 import { HudScene } from "./render/HudScene";
 import { ReplayService } from "./replay/ReplayService";
-import { AscentScene } from "./scenes/AscentScene";
 import { Simulation } from "./simulation/Simulation";
 import { AudioSystem } from "./systems/AudioSystem";
 import { LiveSession } from "./systems/LiveSession";
@@ -57,11 +57,15 @@ const game = new Phaser.Game({
   height: LOGICAL_HEIGHT,
   backgroundColor: "#03080f",
   render: { antialias: true, pixelArt: false, roundPixels: false },
+  physics: {
+    default: "arcade",
+    arcade: { gravity: { x: 0, y: 900 }, debug: false },
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [new AscentScene(simulation, audio, live), hudScene],
+  scene: [new AdventureScene(simulation, audio, live), hudScene],
 });
 
 // The HUD runs in parallel on its own camera so world shake never moves it.
@@ -70,6 +74,8 @@ game.scene.start("HudScene");
 const rounds = new RoundDirector(simulation, {
   enabled: settings.autoRestart,
   delaySeconds: settings.autoRestartDelaySeconds,
+  successDelaySeconds: 12,
+  failureDelaySeconds: 8,
   onRestart: () => {
     // Ein Neustart leert die Befehlswarteschlange, deshalb muessen Safe Mode
     // und Reduced Motion danach erneut gesetzt werden.
