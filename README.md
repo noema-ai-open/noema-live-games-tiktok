@@ -1,209 +1,104 @@
-# NOEMA Live Games for TikTok
+# NOEMA Ascent
 
-Interactive TikTok LIVE gaming platform powered by NOEMA AI.
+NOEMA Ascent ist ein interaktiver 2D-Adventure-Runner für TikTok LIVE. NURI
+trägt einen Energiekern durch eine futuristische Bergwelt zum
+Himmelsleuchtfeuer. Die Figur läuft automatisch, hält vor kontrollierten
+Hindernissen an und reagiert sichtbar auf Geschenke und Chatabstimmungen.
 
-This repository contains the game runtime, the local operator panel, the event
-protocol and the connectors that turn TikTok LIVE events into transparent,
-configurable game actions.
+Die Spielfläche ist als Hochkant-Block in **720 × 960 (3:4)** ausgelegt. Damit
+passt sie unter ein Kamerabild in einem vertikalen TikTok-Layout. Die Welt
+scrollt seitlich innerhalb dieses Blocks.
 
-The repository is currently **private**, so release downloads require a GitHub
-login with access to it.
+## Erste Runde
 
-[![Windows-Installer](https://img.shields.io/badge/Windows-Setup%20herunterladen-0078D4?logo=windows)](https://github.com/noema-ai-open/noema-live-games-tiktok/releases)
-[![Projekt unterstützen](https://img.shields.io/badge/PayPal-Projekt%20unterst%C3%BCtzen-f4b23a?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=swoellner.pay@gmx.de&currency_code=EUR&item_name=NOEMA+Live+Games)
+Das handgebaute Level **DER WEG ZUM HIMMELSLEUCHTFEUER** enthält:
 
-| Stream view (`?view=stream`) | ZAR-BOMBE sequence |
+1. Talpfad mit einem Rose-Sprung
+2. Steilhang mit drei Doughnut-Energiesteinen
+3. zehnsekündige Chatabzweigung
+4. große Schlucht mit Hand-Heart-Brücke oder zwei Doughnuts
+5. Gipfeltor mit Corgi-Helfer und Leuchtfeuer-Finale
+
+Eine Runde dauert 4:30 Minuten. Erfolg bleibt 12 Sekunden, Fehlschlag 8
+Sekunden sichtbar; der Automodus startet anschließend eine neue Runde mit
+einem neuen Seed.
+
+## Geschenkaktionen
+
+| Geschenk | Wirkung |
 | --- | --- |
-| <img src="docs/media/stream-view.png" alt="NOEMA Ascent stream view" width="320"> | <img src="docs/media/zar-bombe.png" alt="ZAR-BOMBE warning phase" width="320"> |
+| Rose | Springen |
+| Doughnut | drei sichtbare Bauteile |
+| Hand Heart | vollständige Energiebrücke |
+| Corgi | Helfer, Reparatur oder Rettung |
+| Galaxy | ZAR-BOMBE |
 
-## NOEMA Ascent
+Die Zuordnung erfolgt zuerst über `giftId`, dann über den normalisierten
+exakten Namen. Coinwerte entscheiden niemals über eine Wirkung. Unbekannte
+Geschenke werden angezeigt und protokolliert, bleiben aber inert.
 
-The first playable mode. Around 30 autonomous robot workers climb a damaged
-megastructure from bottom to top. Viewers help or sabotage with likes and
-gifts; the community must rescue at least 21 of 30 before the round timer runs
-out. The premium spectacle is the `ZAR-BOMBE`.
+## Lokale Entwicklung
 
-## Quick start
+Voraussetzung: Node.js und pnpm.
 
-### Windows (installer)
-
-Download the installer from the
-[releases page](https://github.com/noema-ai-open/noema-live-games-tiktok/releases)
-and run it. Current build: `NOEMA-AI-Ascent-Setup-v0.2.0.exe` (pre-release —
-the branch is not merged yet). Because the repository is private, the download
-link only works while logged in to GitHub. The package contains the built game and a small local web server
-based on Windows' own `System.Net.HttpListener` — no Node.js, no Python, no
-runtime download.
-
-Windows shows an "unknown publisher" warning because the file is not signed
-with a paid publisher certificate. Every release lists its SHA256 checksum, and
-the installer is built from this repository on a Windows runner.
-
-Start "NOEMA-AI Ascent" from the start menu: a console window opens with the
-operator and stream URLs, and the browser opens the operator view. Keep the
-console window open while playing.
-
-The installer is built on a Windows runner by
-[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)
-and attached to a GitHub release. No binary is committed into the git history,
-so cloning the repository stays small.
-
-### From source
-
-```bash
+```powershell
 pnpm install
-pnpm dev
-```
-
-Open `http://127.0.0.1:4173`.
-
-### Offline mode
-
-Start screen → **Offline testen**. No TikTok connection, no credentials. A local
-mock source produces the same normalized events the bridge produces, so the
-offline mode exercises the identical pipeline.
-
-### Live Bridge mode
-
-1. Start the [NOEMA TikTok Live Bridge](https://github.com/noema-ai-open/noema-tiktok-live-bridge)
-   locally and configure the public TikTok account there.
-2. Start screen → **Live Bridge verbinden**, address defaults to
-   `http://127.0.0.1:8765`.
-3. **Verbindung testen**, then **Verbinden & Runde starten**.
-
-Details: [`docs/LIVE_BRIDGE_INTEGRATION.md`](docs/LIVE_BRIDGE_INTEGRATION.md).
-
-## No TikTok credentials
-
-The app never asks for a TikTok password, cookie, session id, QR login or access
-token, and it has no NOEMA account, registration or cloud database. It talks to
-the locally running bridge; the public account name is configured inside the
-bridge. All processing is local.
-
-## Views
-
-| URL | Purpose |
-| --- | --- |
-| `http://127.0.0.1:4173/?view=operator` | Default. Game preview plus the local control panel. |
-| `http://127.0.0.1:4173/?view=stream` | Clean 9:16 capture surface for the streaming software. |
-| `…/?view=stream&autostart=1` | Same, and the round starts without a click. |
-
-The stream view reuses the connection and accessibility settings last saved in
-the operator view and shows no technical details.
-
-### TikTok LIVE Studio
-
-1. Start the installed app, or from source: `pnpm build` then `pnpm preview`
-   (serves the built app on `http://127.0.0.1:4173`).
-2. In LIVE Studio: **Quelle hinzufügen → Link**, paste
-   `http://127.0.0.1:4173/?view=stream&autostart=1`.
-3. Set the source size to **980 × 1280**.
-
-Keep the operator view open in a normal browser window on the side — that is
-where round controls, safe mode and the gift mapping live.
-
-### OBS
-
-Browser source, width 980, height 1280, same URL.
-
-### Where things have to run
-
-The bridge binds hard to `127.0.0.1` and is not reachable across the network by
-design. The game page talks to the bridge from the machine it is displayed on.
-So **bridge, game server and streaming software all belong on the same
-machine** — a `127.0.0.1` bridge address cannot be reached from another host,
-and serving the page from another host while pointing it at `127.0.0.1` is
-blocked by the browser's private-network rules.
-
-## Operator view
-
-Connection state and source switching, round controls (start, pause, resume,
-reset, seed), safe mode, reduced motion, mute and volume, test events for every
-gift tier including gift streaks and duplicate events, tool diagnostics, the
-gift mapping editor, unknown-gift log, live event log, ordered command log and
-replay export/import.
-
-## Gift mapping
-
-Gifts are mapped locally by **gift id**; the gift name is only a fallback,
-because TikTok catalogs change per region and over time. Each row carries an
-action, a strength, a cooldown and an enabled flag, and is stored in
-`localStorage`. Unknown gifts are logged and can be adopted with one click —
-they never trigger a random effect.
-
-See [`docs/GIFT_EVENT_PIPELINE.md`](docs/GIFT_EVENT_PIPELINE.md) for
-deduplication, gift streaks and priority.
-
-## Visuals
-
-Every texture, shape and sound is generated at runtime. The repository contains
-no third-party images, icons, fonts or audio files. See
-[`docs/VISUAL_SYSTEM.md`](docs/VISUAL_SYSTEM.md).
-
-## Privacy and local processing
-
-- No cloud service is required, and none is contacted by the game.
-- Settings and gift mappings live in the browser's `localStorage`.
-- Viewer names are shown only for actions they triggered themselves.
-- No credentials or secrets are stored in the browser bundle.
-
-## Build and tests
-
-```bash
 pnpm typecheck
 pnpm test
 pnpm build
 ```
 
-## Repository layout
+Lokaler Entwicklungsmodus:
 
-```text
-apps/game                 Browser game runtime (Phaser 3 + Vite)
-  src/connectors          Mock and NOEMA Live Bridge connectors, normalization
-  src/gifts               Catalog, streaks, rules engine, priority inbox
-  src/render              World, robots, structures, effects, HUD, ZAR-BOMBE
-  src/simulation          Deterministic fixed-step simulation
-  src/ui                  Start screen, operator panel, mapping editor
-packages/event-protocol   Shared live-event and game-command contracts
-packaging                 Windows installer script and local static server
-docs                      Architecture, game design, integration, visuals
+```powershell
+pnpm --filter @noema/live-game dev
 ```
 
-## Known limitations
+- Operator View: `http://127.0.0.1:5173/?view=operator`
+- Stream View: `http://127.0.0.1:5173/?view=stream&autostart=1`
 
-- The bridge sends no CORS headers, so the optional HTTP probes
-  (`/status`, `/connection`) are blocked when the game runs on a different
-  origin. The WebSocket event stream is unaffected and stays authoritative.
-- The current bridge reports no gift id and no combo-final marker. Gift streaks
-  are therefore finalized after a 2.5 s quiet window, and gift ids are derived
-  from the gift name until a bridge version supplies them.
-- The TikFinity adapter is a disabled placeholder.
-- Camera work is deliberately static: the whole level fits the 9:16 frame.
-- The bridge's TikTok connector uses an unofficial library and can break without
-  notice; that limitation belongs to the bridge, not to this game.
+Der Offline-Test verwendet denselben normalisierten Eventpfad wie die Live
+Bridge. Die Standardadresse der lokalen Bridge ist
+`http://127.0.0.1:8765`.
 
-## Projekt unterstützen
+## Erhaltene Infrastruktur
 
-NOEMA Live Games bleibt kostenlos und öffentlich nutzbar. KI-Infrastruktur,
-Tests, Grafik und Weiterentwicklung verursachen laufende Kosten. Wer das Projekt
-gerne nutzt oder damit Einnahmen erzielt, kann die weitere Entwicklung
-freiwillig unterstützen.
+- Connector-Abstraktion mit Mock Connector und NOEMA Live Bridge Connector
+- getrennte GiftEvents und ChatEvents
+- Eventnormalisierung und Streak-Finalisierung
+- Prioritätswarteschlange und deterministische Command Queue
+- Replay-Grundlage
+- Operatoransicht, Startscreen und Einstellungen
+- AudioSystem mit Mute und Lautstärke
+- lokale Verbindung über `127.0.0.1`
+- Windows-Packaging und Release-Workflow
 
-[Projekt unterstützen](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=swoellner.pay@gmx.de&currency_code=EUR&item_name=NOEMA+Live+Games)
+## Struktur
 
-Support is voluntary. No feature is locked behind a payment.
+```text
+apps/game/src/adventure    Simulation, Level, Hero, Hindernisse, Votes, Checkpoints
+apps/game/src/render       Phaser-Szene, Figur, Welt, HUD, Brücken, Helfer, Bombe
+apps/game/src/assets       Geschenk- und Spritesheet-Verträge
+apps/game/src/connectors   Mock- und Live-Bridge-Connectoren
+apps/game/src/gifts        Mapping, Streaks, Regeln, Prioritäten
+apps/game/src/ui           Startscreen und Operatoransicht
+apps/game/tests            Adventure-, Bridge-, Replay- und Systemtests
+packages/event-protocol    normalisierte Live-Events und GameCommands
+packaging                  Windows-Paketierung und lokaler Static Server
+docs                       Design- und Betriebsdokumentation
+```
 
-## Principles
+Weitere Dokumentation:
 
-Practical AI. Human control.
+- [Adventure Game Design](docs/ADVENTURE_GAME_DESIGN.md)
+- [Adventure Architecture](docs/ADVENTURE_ARCHITECTURE.md)
+- [Gift Actions](docs/GIFT_ACTIONS.md)
+- [Level Authoring](docs/LEVEL_AUTHORING.md)
+- [Live Bridge Integration](docs/LIVE_BRIDGE_INTEGRATION.md)
 
-No process injection, DLL hooking, password collection or session-cookie
-harvesting. The platform is an integration layer, not a complete TikTok client.
+## Rechte und Eigenständigkeit
 
-## Branding
+NOEMA Ascent verwendet eine eigenständige NOEMA-Welt, eigene Figuren,
+Mechaniken und Texte. Es werden keine Figuren, Namen, Grafiken, Sounds, Level
+oder konkreten Szenen bestehender Adventure-Spiele übernommen.
 
-**Powered by NOEMA AI**
-
-## License
-
-MIT
