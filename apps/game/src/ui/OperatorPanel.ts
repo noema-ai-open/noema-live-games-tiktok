@@ -35,18 +35,13 @@ type TestGift = {
   coins: number;
 };
 
-/**
- * Echte Geschenke aus der deutschen TikTok-Liste mit ihrem Muenzwert. So testet
- * man genau das, was live auch ankommt — inklusive der richtigen Stufe.
- */
+/** The five supported gifts, injected through the normal mock event pipeline. */
 const TEST_GIFTS: readonly TestGift[] = [
-  { id: "rose", label: "Rose", tier: "1 Coin · Aufbau", giftName: "Rose", coins: 1 },
-  { id: "gg", label: "GG", tier: "1 Coin · Aufbau", giftName: "GG", coins: 1 },
-  { id: "donut", label: "Donut", tier: "30 · Lücke", giftName: "Donut", coins: 30 },
-  { id: "kranich", label: "Papierkranich", tier: "99 · Lift", giftName: "Papierkranich", coins: 99 },
-  { id: "handherz", label: "Handherz", tier: "100 · Schild", giftName: "Handherz", coins: 100 },
-  { id: "herzen", label: "Herzen", tier: "199 · Schild", giftName: "Herzen", coins: 199 },
-  { id: "flamme", label: "Göttliche Flamme", tier: "999 · Erdbeben", giftName: "Göttliche Flamme", coins: 999 },
+  { id: "rose", label: "Rose", tier: "SPRINGEN", giftName: "Rose", coins: 1 },
+  { id: "doughnut", label: "Doughnut", tier: "3 BAUTEILE", giftName: "Doughnut", coins: 30 },
+  { id: "hand-heart", label: "Hand Heart", tier: "BRÜCKE", giftName: "Hand Heart", coins: 100 },
+  { id: "corgi", label: "Corgi", tier: "HELFER", giftName: "Corgi", coins: 299 },
+  { id: "galaxy", label: "Galaxy", tier: "ZAR-BOMBE", giftName: "Galaxy", coins: 1000 },
 ] as const;
 
 const STATUS_LABELS: Record<ConnectionSnapshot["status"], string> = {
@@ -125,8 +120,8 @@ export class OperatorPanel {
         <div><span>Zustand</span><strong data-status="state">ready</strong></div>
         <div><span>Tick</span><strong data-status="tick">0</strong></div>
         <div><span>Seed</span><strong data-status="seed">0</strong></div>
-        <div><span>Aktiv</span><strong data-status="workers">30</strong></div>
-        <div><span>Gerettet / Verloren</span><strong data-status="result-counts">0 / 0</strong></div>
+        <div><span>Figur</span><strong data-status="workers">NURI</strong></div>
+        <div><span>Abschnitt / Checkpoints</span><strong data-status="result-counts">1 / 0</strong></div>
         <div><span>Energie</span><strong data-status="energy">15%</strong></div>
       </section>
 
@@ -168,18 +163,15 @@ export class OperatorPanel {
           <button data-action="streak">Rose-Serie ×5 senden</button>
           <button data-action="duplicate">Doppeltes Ereignis senden</button>
         </div>
-        <button class="tsar-button" data-test-gift="tsar">
-          <span>⚠</span><b>ZAR-BOMBE</b><small>Zeus · 34.000 Coins · globale Abklingzeit</small>
-        </button>
       </section>
 
       <section class="control-section">
-        <div class="section-title"><span>Werkzeug-Diagnose</span><small>Direkte Befehle</small></div>
+        <div class="section-title"><span>Chat-Abstimmung</span><small>Mock-ChatEvents, keine Gifts</small></div>
         <div class="button-grid four compact">
-          <button data-action="jump">Sprungfeld</button>
-          <button data-action="blocker">Umlenkung</button>
-          <button data-action="rescue">Rettung</button>
-          <button data-action="area-rescue">Flächenrettung</button>
+          <button data-chat="links">links</button>
+          <button data-chat="rechts">rechts</button>
+          <button data-chat="1">1</button>
+          <button data-chat="2">2</button>
         </div>
       </section>
 
@@ -244,12 +236,15 @@ export class OperatorPanel {
       const command = target.dataset["command"];
       const action = target.dataset["action"];
       const free = target.dataset["free"];
+      const chat = target.dataset["chat"];
       const testGift = target.dataset["testGift"];
 
       if (command === "pause" || command === "resume") {
         this.submit({ type: command });
       } else if (free) {
         this.sendFree(free);
+      } else if (chat) {
+        this.deps.connectors.mock.injectChat(chat, MOCK_VIEWERS[4]!);
       } else if (testGift) {
         this.sendTestGift(testGift);
       } else if (action) {
@@ -309,18 +304,6 @@ export class OperatorPanel {
 
   private sendTestGift(id: string): void {
     this.deps.audio.play("gift");
-    if (id === "tsar") {
-      this.deps.connectors.mock.injectGift(
-        {
-          giftId: "mock_tsar_bomb",
-          giftName: "Zeus",
-          coinValue: 34000,
-          comboFinal: true,
-        },
-        MOCK_VIEWERS[0]!,
-      );
-      return;
-    }
     const gift = TEST_GIFTS.find((item) => item.id === id);
     if (!gift) return;
     this.deps.connectors.mock.injectGift(
@@ -360,9 +343,9 @@ export class OperatorPanel {
     for (let index = 0; index < 2; index += 1) {
       this.deps.connectors.mock.injectGift(
         {
-          giftId: "name:bridge-crate",
-          giftName: "Bridge Crate",
-          coinValue: 30,
+          giftId: "name:rose",
+          giftName: "Rose",
+          coinValue: 1,
           comboFinal: true,
         },
         MOCK_VIEWERS[2]!,
@@ -420,26 +403,6 @@ export class OperatorPanel {
         return;
       case "duplicate":
         this.sendDuplicate();
-        return;
-      case "jump":
-        this.submit({
-          type: "place_jump_field",
-          zoneId: "zone-1",
-          durationTicks: TICKS.second * 15,
-        });
-        return;
-      case "blocker":
-        this.submit({
-          type: "place_blocker",
-          x: 0.4,
-          durationTicks: TICKS.second * 8,
-        });
-        return;
-      case "rescue":
-        this.submit({ type: "rescue_worker" });
-        return;
-      case "area-rescue":
-        this.submit({ type: "area_rescue", x: 360, y: 860, radius: 360 });
         return;
       case "clear":
         this.clearedBeforeSequence =
@@ -559,22 +522,25 @@ export class OperatorPanel {
     this.setText("state", state.roundStatus.toUpperCase());
     this.setText("tick", String(state.tick));
     this.setText("seed", String(state.seed));
-    this.setText("workers", String(simulation.getActiveCount()));
-    this.setText("result-counts", `${state.rescuedCount} / ${state.lostCount}`);
+    this.setText("workers", `NURI · ${state.heroState}`);
+    this.setText(
+      "result-counts",
+      `${simulation.director.current.section} / ${state.checkpointCount}`,
+    );
     this.setText("energy", `${Math.round(state.teamEnergy)}%`);
     this.setText(
       "round-result",
-      `${state.roundStatus.toUpperCase()} · ${state.rescuedCount} gerettet`,
+      `${state.roundStatus.toUpperCase()} · ${state.segmentId}`,
     );
     this.setText(
       "recovery",
       state.tsarBomb.phase === "recovery"
-        ? `TEAM REBUILD · ${Math.ceil((state.tsarBomb.recoveryUntilTick - state.tick) / TICKS.second)}s · Reparatur ×${state.recoveryMultiplier}`
+        ? `TEAM REBUILD · ${Math.ceil((state.tsarBomb.recoveryUntilTick - state.tick) / TICKS.second)}s`
         : "Wiederaufbau inaktiv",
     );
     this.setText(
       "cooldowns",
-      `ZAR-BOMBE ${Math.ceil(Math.max(0, state.tsarBomb.cooldownUntilTick - state.tick) / TICKS.second)}s · Schild ${Math.ceil(Math.max(0, state.shieldUntilTick - state.tick) / TICKS.second)}s · Lift ${Math.ceil(Math.max(0, state.liftOverdriveUntilTick - state.tick) / TICKS.second)}s · Umwelt ${state.environmentMode}`,
+      `ZAR-BOMBE ${Math.ceil(Math.max(0, state.tsarBomb.cooldownUntilTick - state.tick) / TICKS.second)}s · Route ${state.chosenRoute ?? "offen"} · Zeit ${Math.ceil(state.remainingTicks / TICKS.second)}s`,
     );
     this.setText(
       "dupes",

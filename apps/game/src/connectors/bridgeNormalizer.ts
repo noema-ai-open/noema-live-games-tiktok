@@ -88,6 +88,10 @@ function parseGift(
   const comboId = asString(metadata["combo_id"]);
   const comboFinal =
     asBoolean(metadata["repeat_end"]) ?? asBoolean(metadata["combo_final"]);
+  const iconUrl =
+    asString(metadata["gift_image_url"]) ??
+    asString(metadata["icon_url"]) ??
+    asString(metadata["image_url"]);
 
   const gift: NormalizedGiftPayload = {
     giftId,
@@ -95,6 +99,7 @@ function parseGift(
     coinValue,
     repeatCount,
   };
+  if (iconUrl !== undefined) gift.iconUrl = iconUrl;
   if (comboId !== undefined) gift.comboId = comboId;
   if (comboFinal !== undefined) gift.comboFinal = comboFinal;
   return gift;

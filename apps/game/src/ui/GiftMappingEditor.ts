@@ -2,7 +2,6 @@ import { SELECTABLE_ACTIONS, getAction } from "../gifts/actions";
 import type {
   GiftCatalogConfig,
   GiftMappingEntry,
-  GiftTierRule,
 } from "../gifts/giftCatalog";
 import type { UnknownGift } from "../gifts/RulesEngine";
 import { escapeHtml } from "./StartScreen";
@@ -44,26 +43,7 @@ export class GiftMappingEditor {
 
   private onChange(event: Event): void {
     const target = event.target as HTMLInputElement | HTMLSelectElement;
-    const tierId = target.dataset["tierId"];
     const field = target.dataset["field"];
-    if (tierId && field) {
-      const rule = this.catalog.tiers.find((item) => item.id === tierId);
-      if (!rule) return;
-      if (field === "action") {
-        rule.action = target.value as GiftTierRule["action"];
-        rule.cooldownSeconds = getAction(rule.action).defaultCooldownSeconds;
-      } else if (field === "strength") {
-        rule.strength = Number(target.value) || 1;
-      } else if (field === "cooldown") {
-        rule.cooldownSeconds = Math.max(0, Number(target.value) || 0);
-      } else if (field === "enabled") {
-        rule.enabled = (target as HTMLInputElement).checked;
-      }
-      this.handlers.onChange(this.catalog);
-      if (field === "action") this.render();
-      return;
-    }
-
     const giftId = target.dataset["giftId"];
     if (!giftId || !field) return;
     const entry = this.catalog.entries.find((item) => item.giftId === giftId);
@@ -97,8 +77,8 @@ export class GiftMappingEditor {
       matchNames: [giftName.toLowerCase()],
       displayName: giftName,
       coinValue: 0,
-      action: "team_energy",
-      strength: 4,
+      action: "none",
+      strength: 1,
       cooldownSeconds: 0,
       enabled: true,
     });
@@ -108,47 +88,14 @@ export class GiftMappingEditor {
 
   private render(): void {
     this.root.innerHTML = `
-      <div class="section-title"><span>Münzstufen</span><small>Gelten für jedes Geschenk</small></div>
+      <div class="section-title"><span>Geschenk-Mapping</span><small>giftId, dann exakter Name</small></div>
       <p class="hint">
-        Entscheidend ist der Münzwert, den TikTok mitliefert — nicht der Name.
-        So wirkt auch ein Geschenk, das diese App noch nie gesehen hat.
+        Unbekannte Geschenke bleiben ohne Wirkung. Der Münzwert löst niemals
+        automatisch eine Aktion oder die ZAR-BOMBE aus.
       </p>
-      <div class="mapping-rows">${this.catalog.tiers.map((rule) => this.tierMarkup(rule)).join("")}</div>
-
-      <div class="section-title"><span>Ausnahmen</span><small>Einzelne Geschenke, gehen vor</small></div>
       <div class="mapping-rows">${this.catalog.entries.map((entry) => this.rowMarkup(entry)).join("")}</div>
       <div class="section-title"><span>Unbekannte Geschenke</span><small>Nur protokolliert</small></div>
       <div class="unknown-list" data-unknown>${this.unknownMarkup()}</div>
-    `;
-  }
-
-  private tierMarkup(rule: GiftTierRule): string {
-    const options = SELECTABLE_ACTIONS.map((id) => {
-      const definition = getAction(id);
-      const selected = id === rule.action ? " selected" : "";
-      return `<option value="${id}"${selected}>${definition.icon} ${escapeHtml(definition.label)}</option>`;
-    }).join("");
-    const range =
-      rule.maxCoins === Infinity
-        ? `ab ${rule.minCoins}`
-        : `${rule.minCoins}–${rule.maxCoins}`;
-    return `
-      <div class="mapping-row">
-        <label class="mapping-toggle" title="Aktiviert">
-          <input type="checkbox" data-tier-id="${escapeHtml(rule.id)}" data-field="enabled" ${rule.enabled ? "checked" : ""} />
-        </label>
-        <div class="mapping-name">
-          <strong>${escapeHtml(rule.label)}</strong>
-          <small>${escapeHtml(range)} Coins</small>
-        </div>
-        <select data-tier-id="${escapeHtml(rule.id)}" data-field="action">${options}</select>
-        <label class="mapping-number">Stärke
-          <input type="number" min="0" step="1" value="${rule.strength}" data-tier-id="${escapeHtml(rule.id)}" data-field="strength" />
-        </label>
-        <label class="mapping-number">Abklingzeit
-          <input type="number" min="0" step="1" value="${rule.cooldownSeconds}" data-tier-id="${escapeHtml(rule.id)}" data-field="cooldown" />
-        </label>
-      </div>
     `;
   }
 
@@ -156,7 +103,7 @@ export class GiftMappingEditor {
     const options = SELECTABLE_ACTIONS.map((id) => {
       const definition = getAction(id);
       const selected = id === entry.action ? " selected" : "";
-      return `<option value="${id}"${selected}>${definition.icon} ${escapeHtml(definition.label)}</option>`;
+      return `<option value="${id}"${selected}>${escapeHtml(definition.label)}</option>`;
     }).join("");
 
     return `

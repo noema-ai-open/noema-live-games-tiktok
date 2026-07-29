@@ -36,6 +36,8 @@ export type NormalizedGiftPayload = {
   giftName: string;
   coinValue: number;
   repeatCount: number;
+  /** Current artwork supplied by the bridge. Local fallbacks remain mandatory. */
+  iconUrl?: string;
   comboId?: string;
   comboFinal?: boolean;
 };
@@ -66,6 +68,17 @@ export type GameCommand =
   | {
       type: "add_team_energy";
       amount: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "add_time";
+      seconds: number;
+      actor?: ViewerIdentity;
+    }
+  | {
+      type: "route_vote";
+      eventId: string;
+      choice: "left" | "right";
       actor?: ViewerIdentity;
     }
   | {
@@ -132,6 +145,8 @@ export type GameCommand =
     }
   | {
       type: "tsar_bomb";
+      /** Gift transaction id; the simulation processes it at most once. */
+      transactionId?: string;
       actor?: ViewerIdentity;
     }
   | {

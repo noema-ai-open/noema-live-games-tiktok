@@ -3,15 +3,12 @@ import { giftIdFromName } from "../connectors/bridgeNormalizer";
 import { getAction, type GameActionId } from "./actions";
 
 export const GIFT_CATALOG_STORAGE_KEY = "noema-ascent.gift-catalog";
-export const GIFT_CATALOG_VERSION = 3;
+export const GIFT_CATALOG_VERSION = 4;
 
 export type GiftMappingEntry = {
-  /** Preferred key. Gift names are only used as a fallback. */
   giftId: string;
-  /** Lowercase gift names that resolve to this entry when the id is unknown. */
   matchNames: string[];
   displayName: string;
-  /** Coin value observed for this gift; informational, kept editable. */
   coinValue: number;
   action: GameActionId;
   strength: number;
@@ -19,19 +16,11 @@ export type GiftMappingEntry = {
   enabled: boolean;
 };
 
-/**
- * Zuordnung nach Muenzwert.
- *
- * Geschenknamen aendern sich je nach Region und Zeitpunkt, und niemand kennt
- * den vollstaendigen TikTok-Katalog. Der Muenzwert kommt aber bei jedem
- * Geschenk mit. Deshalb entscheidet er, was passiert — auch bei Geschenken,
- * die diese App noch nie gesehen hat.
- */
+/** Legacy-compatible shape; coin tiers stay deliberately empty. */
 export type GiftTierRule = {
   id: string;
   label: string;
   minCoins: number;
-  /** Obergrenze einschliesslich. `Infinity` fuer die hoechste Stufe. */
   maxCoins: number;
   action: GameActionId;
   strength: number;
@@ -47,69 +36,24 @@ export type FreeActionConfig = {
 
 export type GiftCatalogConfig = {
   version: number;
-  /** Stufen nach Muenzwert — greifen fuer jedes Geschenk. */
   tiers: GiftTierRule[];
-  /** Ausnahmen fuer einzelne Geschenke, haben Vorrang vor den Stufen. */
   entries: GiftMappingEntry[];
   free: FreeActionConfig;
 };
 
-function tier(
-  id: string,
-  label: string,
-  minCoins: number,
-  maxCoins: number,
-  action: GameActionId,
-  strength: number,
-): GiftTierRule {
-  return {
-    id,
-    label,
-    minCoins,
-    maxCoins,
-    action,
-    strength,
-    cooldownSeconds: getAction(action).defaultCooldownSeconds,
-    enabled: true,
-  };
-}
-
-/**
- * Hilfe ist billig, Zerstoerung teuer — die Leiter aus dem Wirtschaftskonzept.
- *
- * Die Beispiele in den Beschriftungen stammen aus echten Geschenklisten der
- * deutschen TikTok-Oberflaeche. Sie dienen nur der Wiedererkennung; entscheidend
- * ist immer der Muenzwert, den die Bridge mitliefert.
- */
-export function createDefaultTiers(): GiftTierRule[] {
-  // Die Grenzen folgen der tatsaechlichen Verteilung im deutschen Katalog:
-  // Der Grossteil der Geschenke kostet 1 bis 99 Coins, ueber 400 wird es sehr
-  // duenn. Eine Stufe erst ab 500 haette im Stream fast nie ausgeloest.
-  return [
-    tier("tier-1", "1–9 · Rose, GG, Bussi", 1, 9, "repair", 20),
-    tier("tier-2", "10–49 · Donut, S Blumen", 10, 49, "bridge", 1),
-    tier("tier-3", "50–99 · Papierkranich, Pilz", 50, 99, "lift", 18),
-    tier("tier-4", "100–299 · Handherz, Herzen", 100, 299, "team_shield", 15),
-    // Wer 400 Coins schickt, will helfen. Eine Sabotagestufe an dieser Stelle
-    // wuerde grosszuegige Zuschauer bestrafen — deshalb ist auch das obere
-    // Band hilfreich. Erdbeben und Sturm bleiben zuweisbar, nur nicht als
-    // Voreinstellung.
-    tier("tier-5", "300–999 · DJ-Set, Göttliche Flamme", 300, 999, "area_rescue", 16),
-    tier("tier-6", "ab 1.000 · Galaxie, Zeus", 1000, Infinity, "tsar_bomb", 1),
-  ];
+function normalizeGiftName(name: string): string {
+  return name.normalize("NFKC").trim().toLocaleLowerCase("en-US").replace(/\s+/g, " ");
 }
 
 function entry(
-  giftId: string,
   displayName: string,
   coinValue: number,
   action: GameActionId,
-  strength: number,
-  matchNames: string[] = [],
+  strength = 1,
 ): GiftMappingEntry {
   return {
-    giftId,
-    matchNames: [displayName.toLowerCase(), ...matchNames],
+    giftId: giftIdFromName(displayName),
+    matchNames: [normalizeGiftName(displayName)],
     displayName,
     coinValue,
     action,
@@ -119,25 +63,25 @@ function entry(
   };
 }
 
-/**
- * Sensible starting values. TikTok gift catalogs change per region and over
- * time, so nothing here is treated as global truth — the operator can remap
- * every row, and unknown gifts stay inert until they are mapped.
- */
+export function createDefaultTiers(): GiftTierRule[] {
+  return [];
+}
+
 export function createDefaultCatalog(): GiftCatalogConfig {
   return {
     version: GIFT_CATALOG_VERSION,
-    tiers: createDefaultTiers(),
-    // Nur echte, weit verbreitete TikTok-Geschenke als Ausnahme. Alles andere
-    // laeuft ueber die Muenzstufen, damit auch unbekannte Geschenke wirken.
+    tiers: [],
     entries: [
-      entry(giftIdFromName("Rose"), "Rose", 1, "repair", 20, ["rosa"]),
-      entry("mock_tsar_bomb", "ZAR-BOMBE Testgeschenk", 10000, "tsar_bomb", 1),
+      entry("Rose", 1, "jump"),
+      entry("Doughnut", 30, "build_blocks_3"),
+      entry("Hand Heart", 100, "build_bridge"),
+      entry("Corgi", 299, "helper"),
+      entry("Galaxy", 1000, "tsar_bomb"),
     ],
     free: {
       like: { action: "team_energy", strength: 2 },
-      follow: { action: "team_energy", strength: 8 },
-      share: { action: "team_energy", strength: 12 },
+      follow: { action: "time_bonus", strength: 3 },
+      share: { action: "team_energy", strength: 15 },
     },
   };
 }
@@ -146,7 +90,6 @@ export type ResolvedEffect = {
   action: GameActionId;
   strength: number;
   cooldownSeconds: number;
-  /** Woher die Regel kommt — fuer die Anzeige im Operator. */
   source: string;
 };
 
@@ -155,191 +98,83 @@ export type CatalogResolution =
   | { kind: "disabled"; label: string }
   | { kind: "unknown"; giftId: string; giftName: string };
 
-/**
- * Reihenfolge: Ausnahme fuer genau dieses Geschenk, sonst der Name als
- * Rueckfallebene, sonst die Muenzstufe. Erst wenn auch der Muenzwert fehlt,
- * gilt ein Geschenk als unbekannt.
- */
+/** giftId first, then one normalized exact name; coin value never decides. */
 export function resolveGift(
   catalog: GiftCatalogConfig,
   gift: NormalizedGiftPayload,
 ): CatalogResolution {
   const byId = catalog.entries.find((item) => item.giftId === gift.giftId);
-  const name = gift.giftName.trim().toLowerCase();
+  const normalizedName = normalizeGiftName(gift.giftName);
   const match =
-    byId ?? catalog.entries.find((item) => item.matchNames.includes(name));
-  if (match) {
-    if (!match.enabled) return { kind: "disabled", label: match.displayName };
-    return {
-      kind: "mapped",
-      effect: {
-        action: match.action,
-        strength: match.strength,
-        cooldownSeconds: match.cooldownSeconds,
-        source: match.displayName,
-      },
-    };
-  }
-
-  const coins = gift.coinValue;
-  if (coins > 0) {
-    const rule = (catalog.tiers ?? []).find(
-      (item) => coins >= item.minCoins && coins <= item.maxCoins,
+    byId ??
+    catalog.entries.find((item) =>
+      item.matchNames.some((name) => normalizeGiftName(name) === normalizedName),
     );
-    if (rule) {
-      if (!rule.enabled) return { kind: "disabled", label: rule.label };
-      return {
-        kind: "mapped",
-        effect: {
-          action: rule.action,
-          strength: rule.strength,
-          cooldownSeconds: rule.cooldownSeconds,
-          source: rule.label,
-        },
-      };
-    }
+  if (!match) {
+    return { kind: "unknown", giftId: gift.giftId, giftName: gift.giftName };
   }
-
-  return { kind: "unknown", giftId: gift.giftId, giftName: gift.giftName };
+  if (!match.enabled) return { kind: "disabled", label: match.displayName };
+  return {
+    kind: "mapped",
+    effect: {
+      action: match.action,
+      strength: match.strength,
+      cooldownSeconds: match.cooldownSeconds,
+      source: match.displayName,
+    },
+  };
 }
 
-/**
- * Accepts any previously stored shape and repairs it. Unknown versions are
- * merged onto the defaults instead of being thrown away.
- */
+const ACTION_KEYS = new Set<GameActionId>([
+  "none",
+  "team_energy",
+  "time_bonus",
+  "jump",
+  "build_blocks_3",
+  "build_bridge",
+  "helper",
+  "tsar_bomb",
+]);
+
 export function migrateCatalog(raw: unknown): GiftCatalogConfig {
   const defaults = createDefaultCatalog();
   if (typeof raw !== "object" || raw === null) return defaults;
   const candidate = raw as Partial<GiftCatalogConfig>;
-  const entries = Array.isArray(candidate.entries)
+  const custom = Array.isArray(candidate.entries)
     ? candidate.entries
-        .map((item) => normalizeEntry(item))
+        .map(normalizeEntry)
         .filter((item): item is GiftMappingEntry => item !== null)
     : [];
-
-  const merged = [...entries];
+  const entries = [...custom];
   for (const fallback of defaults.entries) {
-    if (!merged.some((item) => item.giftId === fallback.giftId)) {
-      merged.push(fallback);
-    }
+    if (!entries.some((item) => item.giftId === fallback.giftId)) entries.push(fallback);
   }
-  // Erfundene Platzhalter aus fruehen Fassungen entfernen: Diese Geschenke
-  // gibt es auf TikTok nicht, sie haben live nie ausgeloest.
-  const invented = new Set([
-    giftIdFromName("Bridge Crate"),
-    giftIdFromName("Jump Pad"),
-    giftIdFromName("Lift Core"),
-    giftIdFromName("Rescue Drone"),
-    giftIdFromName("Team Aegis"),
-    giftIdFromName("Crosswind"),
-    giftIdFromName("Fault Line"),
-  ]);
-  const cleaned = merged.filter((item) => !invented.has(item.giftId));
-
-  const free = defaults.free;
-  const rawFree = candidate.free;
-  if (rawFree && typeof rawFree === "object") {
-    for (const key of ["like", "follow", "share"] as const) {
-      const value = (rawFree as Record<string, unknown>)[key];
-      if (typeof value !== "object" || value === null) continue;
-      const record = value as Record<string, unknown>;
-      const action = record["action"];
-      const strength = record["strength"];
-      if (typeof action === "string" && action in ACTION_KEYS) {
-        free[key].action = action as GameActionId;
-      }
-      if (typeof strength === "number" && Number.isFinite(strength)) {
-        free[key].strength = strength;
-      }
-    }
-  }
-
-  const tiers = Array.isArray(candidate.tiers)
-    ? candidate.tiers
-        .map((item) => normalizeTier(item))
-        .filter((item): item is GiftTierRule => item !== null)
-    : [];
-
-  return {
-    version: GIFT_CATALOG_VERSION,
-    tiers: tiers.length > 0 ? tiers : defaults.tiers,
-    entries: cleaned,
-    free,
-  };
-}
-
-const ACTION_KEYS: Record<string, true> = {
-  none: true,
-  team_energy: true,
-  repair: true,
-  bridge: true,
-  jump_field: true,
-  lift: true,
-  team_shield: true,
-  rescue_one: true,
-  area_rescue: true,
-  wind: true,
-  low_gravity: true,
-  collapse: true,
-  earthquake: true,
-  tsar_bomb: true,
-};
-
-function normalizeTier(raw: unknown): GiftTierRule | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const record = raw as Record<string, unknown>;
-  const action = record["action"];
-  if (typeof action !== "string" || !(action in ACTION_KEYS)) return null;
-  const number = (value: unknown, fallback: number): number =>
-    typeof value === "number" && Number.isFinite(value) ? value : fallback;
-  return {
-    id: typeof record["id"] === "string" ? record["id"] : `tier-${Date.now()}`,
-    label: typeof record["label"] === "string" ? record["label"] : "Stufe",
-    minCoins: number(record["minCoins"], 0),
-    // JSON kennt kein Infinity; nach dem Laden steht dort null.
-    maxCoins:
-      record["maxCoins"] === null ? Infinity : number(record["maxCoins"], Infinity),
-    action: action as GameActionId,
-    strength: number(record["strength"], 1),
-    cooldownSeconds: number(
-      record["cooldownSeconds"],
-      getAction(action as GameActionId).defaultCooldownSeconds,
-    ),
-    enabled: record["enabled"] !== false,
-  };
+  return { ...defaults, entries };
 }
 
 function normalizeEntry(raw: unknown): GiftMappingEntry | null {
   if (typeof raw !== "object" || raw === null) return null;
-  const record = raw as Record<string, unknown>;
-  const giftId = record["giftId"];
-  const action = record["action"];
-  if (typeof giftId !== "string" || giftId.length === 0) return null;
-  if (typeof action !== "string" || !(action in ACTION_KEYS)) return null;
+  const value = raw as Record<string, unknown>;
+  if (typeof value["giftId"] !== "string") return null;
+  if (typeof value["action"] !== "string" || !ACTION_KEYS.has(value["action"] as GameActionId)) {
+    return null;
+  }
   const displayName =
-    typeof record["displayName"] === "string" && record["displayName"]
-      ? (record["displayName"] as string)
-      : giftId;
-  const matchNames = Array.isArray(record["matchNames"])
-    ? (record["matchNames"] as unknown[]).filter(
-        (item): item is string => typeof item === "string",
-      )
-    : [displayName.toLowerCase()];
-  const numberOr = (value: unknown, fallback: number): number =>
-    typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
+    typeof value["displayName"] === "string" ? value["displayName"] : value["giftId"];
   return {
-    giftId,
-    matchNames,
+    giftId: value["giftId"],
+    matchNames: Array.isArray(value["matchNames"])
+      ? value["matchNames"].filter((item): item is string => typeof item === "string")
+      : [normalizeGiftName(displayName)],
     displayName,
-    coinValue: numberOr(record["coinValue"], 0),
-    action: action as GameActionId,
-    strength: numberOr(record["strength"], 1),
-    cooldownSeconds: numberOr(
-      record["cooldownSeconds"],
-      getAction(action as GameActionId).defaultCooldownSeconds,
-    ),
-    enabled: record["enabled"] !== false,
+    coinValue: typeof value["coinValue"] === "number" ? value["coinValue"] : 0,
+    action: value["action"] as GameActionId,
+    strength: typeof value["strength"] === "number" ? value["strength"] : 1,
+    cooldownSeconds:
+      typeof value["cooldownSeconds"] === "number"
+        ? Math.max(0, value["cooldownSeconds"])
+        : getAction(value["action"] as GameActionId).defaultCooldownSeconds,
+    enabled: value["enabled"] !== false,
   };
 }
 
@@ -350,23 +185,19 @@ export function loadCatalog(storage?: StorageLike): GiftCatalogConfig {
   if (!store) return createDefaultCatalog();
   try {
     const raw = store.getItem(GIFT_CATALOG_STORAGE_KEY);
-    if (!raw) return createDefaultCatalog();
-    return migrateCatalog(JSON.parse(raw));
+    return raw ? migrateCatalog(JSON.parse(raw)) : createDefaultCatalog();
   } catch {
     return createDefaultCatalog();
   }
 }
 
-export function saveCatalog(
-  catalog: GiftCatalogConfig,
-  storage?: StorageLike,
-): void {
+export function saveCatalog(catalog: GiftCatalogConfig, storage?: StorageLike): void {
   const store = storage ?? safeLocalStorage();
   if (!store) return;
   try {
     store.setItem(GIFT_CATALOG_STORAGE_KEY, JSON.stringify(catalog));
   } catch {
-    /* storage full or blocked — mapping stays in memory */
+    // Mapping remains active in memory.
   }
 }
 
@@ -377,3 +208,5 @@ function safeLocalStorage(): StorageLike | null {
     return null;
   }
 }
+
+export { normalizeGiftName };

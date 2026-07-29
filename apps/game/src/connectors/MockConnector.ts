@@ -86,6 +86,18 @@ export class MockConnector extends BaseConnector {
     return event;
   }
 
+  injectChat(
+    message: string,
+    actor: ViewerIdentity = MOCK_VIEWERS[0]!,
+    eventId = nextEventId("mock-chat"),
+  ): NormalizedLiveEvent {
+    const event = this.buildEvent("chat", actor, eventId);
+    event.message = message.slice(0, 200);
+    this.emitEvent(event);
+    this.publishStatus();
+    return event;
+  }
+
   private emitAmbient(): void {
     const actor = MOCK_VIEWERS[this.rng.integer(0, MOCK_VIEWERS.length - 1)]!;
     const roll = this.rng.next();

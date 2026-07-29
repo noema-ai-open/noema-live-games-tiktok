@@ -97,7 +97,22 @@ export class RulesEngine {
       return;
     }
     this.tracker.observe(event, now);
-    if (event.kind === "chat" || event.kind === "subscription") return;
+    if (event.kind === "chat") {
+      const choice = routeChoice(event.message);
+      if (choice) {
+        this.inbox.push(
+          {
+            type: "route_vote",
+            eventId: event.eventId,
+            choice,
+            actor: event.actor,
+          },
+          "low",
+        );
+      }
+      return;
+    }
+    if (event.kind === "subscription") return;
 
     const config =
       event.kind === "like"
@@ -188,8 +203,11 @@ export class RulesEngine {
     }
 
     const strength = scaleStrength(definition.id, effect.strength, total);
-    const command = definition.build(strength, event.actor);
+    let command = definition.build(strength, event.actor);
     if (!command) return;
+    if (command.type === "tsar_bomb") {
+      command = { ...command, transactionId: event.eventId };
+    }
 
     this.startCooldown(effect.action, effect.cooldownSeconds, now);
     this.inbox.push(command, priorityFor(definition));
@@ -220,6 +238,8 @@ export class RulesEngine {
       icon: detail.icon,
       sender: event.actor.displayName ?? event.actor.username,
       giftLabel: event.gift?.giftName ?? event.kind,
+      ...(event.gift?.giftId ? { giftId: event.gift.giftId } : {}),
+      ...(event.gift?.iconUrl ? { bridgeIconUrl: event.gift.iconUrl } : {}),
       effectLabel: detail.effectLabel,
       repeatCount: total,
       createdAt: Date.now(),
@@ -264,7 +284,7 @@ function scaleStrength(
   repeatCount: number,
 ): number {
   // Repeat counts scale continuous effects, but never one-shot structures.
-  const scalable: GameActionId[] = ["repair", "team_energy"];
+  const scalable: GameActionId[] = ["team_energy"];
   if (!scalable.includes(action)) return baseStrength;
   return baseStrength * Math.min(20, Math.max(1, repeatCount));
 }
@@ -283,4 +303,11 @@ function tierFor(
   const coins = coinValue * Math.max(1, total);
   if (coins >= 500 || definition.priority === "critical") return "medium";
   return "small";
+}
+
+function routeChoice(message?: string): "left" | "right" | null {
+  const value = message?.normalize("NFKC").trim().toLocaleLowerCase("de-DE");
+  if (value === "links" || value === "1") return "left";
+  if (value === "rechts" || value === "2") return "right";
+  return null;
 }

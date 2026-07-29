@@ -9,6 +9,8 @@ export type GiftFeedback = {
   sender: string;
   /** Gift label as reported by the connector. */
   giftLabel: string;
+  giftId?: string;
+  bridgeIconUrl?: string;
   /** Effect the gift triggered, e.g. `+1 REPARATUR`. */
   effectLabel: string;
   repeatCount: number;
