@@ -15,7 +15,7 @@ ausführen → weiterlaufen. An einer Abzweigung stimmt der Chat zehn Sekunden m
 
 ## Darstellung
 
-Das MVP ist eine kontrollierte Phaser-2D-Seitenansicht in einem 720×960
+Das MVP ist eine kontrollierte Phaser-2D-Seitenansicht in einem 720×760
 Hochkant-Block. Parallax-Berge, Waldsilhouetten, definierte Plattformen,
 Brücken, Bausteine und Tore sind prozedurale saubere Platzhalter. Es gibt keine
 3D-Geometrie und kein Versprechen fertiger Concept Art.

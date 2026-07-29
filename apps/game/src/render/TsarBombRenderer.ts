@@ -70,16 +70,16 @@ export class TsarBombRenderer {
       .setDepth(104)
       .setVisible(false);
     this.mushroom.fillStyle(0x020205, 1);
-    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 360, 430, 190);
-    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 410, 300, 150);
-    this.mushroom.fillRoundedRect(LOGICAL_WIDTH / 2 - 72, 390, 144, 300, 50);
-    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 690, 250, 74);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 330, 430, 190);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 380, 300, 150);
+    this.mushroom.fillRoundedRect(LOGICAL_WIDTH / 2 - 72, 360, 144, 250, 50);
+    this.mushroom.fillEllipse(LOGICAL_WIDTH / 2, 610, 250, 74);
     this.mushroom.lineStyle(8, 0xff7b38, 0.82);
-    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 360, 430, 190);
+    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 330, 430, 190);
     this.mushroom.lineStyle(3, 0xffd36a, 0.64);
-    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 410, 300, 150);
+    this.mushroom.strokeEllipse(LOGICAL_WIDTH / 2, 380, 300, 150);
     this.rebuild = scene.add
-      .text(LOGICAL_WIDTH / 2, 770, "TEAM REBUILD\nZURÜCK ZU LEVEL 1", {
+      .text(LOGICAL_WIDTH / 2, 660, "TEAM REBUILD\nZURÜCK ZU LEVEL 1", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontSize: "48px",
         fontStyle: "bold",

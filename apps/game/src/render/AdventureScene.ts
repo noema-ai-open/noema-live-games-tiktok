@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { FIXED_STEP_MS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from "../config/gameConfig";
+import {
+  FIXED_STEP_MS,
+  LOGICAL_WIDTH,
+  WORLD_CAMERA_SCROLL_Y,
+  WORLD_RENDER_HEIGHT,
+} from "../config/gameConfig";
 import type { Simulation } from "../simulation/Simulation";
 import type { RoundStatus, TsarPhase } from "../simulation/types";
 import type { AudioSystem } from "../systems/AudioSystem";
@@ -38,7 +43,8 @@ export class AdventureScene extends Phaser.Scene {
     const level = this.simulation.director.level;
     this.renderedLevelId = level.id;
     this.cameras.main.setBackgroundColor("#07111f");
-    this.cameras.main.setBounds(0, 0, level.finishX + 300, LOGICAL_HEIGHT);
+    this.cameras.main.setBounds(0, 0, level.finishX + 300, WORLD_RENDER_HEIGHT);
+    this.cameras.main.scrollY = WORLD_CAMERA_SCROLL_Y;
     this.environment = new EnvironmentRenderer(this, level);
     this.obstacleView = new ObstacleView(this, this.simulation);
     this.heroView = new HeroView(this);

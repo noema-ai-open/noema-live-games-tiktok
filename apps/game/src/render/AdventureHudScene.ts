@@ -31,7 +31,7 @@ const SLOT_DATA: readonly {
 ];
 
 /**
- * Stream-safe HUD for the 720x960 block below the camera image.
+ * Stream-safe HUD for the compact 720x760 block below the camera image.
  *
  * Gameplay remains visible in the upper part of the game block. TikTok may
  * cover the lower third with chat, so progress and the permanent legend live
@@ -151,25 +151,25 @@ export class AdventureHudScene extends Phaser.Scene {
       .setDepth(6);
 
     this.add
-      .rectangle(18, 724, LOGICAL_WIDTH - 36, 66, 0x041019, 0.91)
+      .rectangle(18, 526, LOGICAL_WIDTH - 36, 58, 0x041019, 0.91)
       .setOrigin(0)
       .setStrokeStyle(2, 0x2ccad1, 0.52)
       .setDepth(2);
     this.add
-      .text(32, 733, "KAMPAGNENFORTSCHRITT", {
+      .text(32, 533, "KAMPAGNENFORTSCHRITT", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontSize: "11px",
         fontStyle: "bold",
         color: "#86b9c2",
       })
       .setDepth(4);
-    this.add.rectangle(32, 766, 410, 12, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
+    this.add.rectangle(32, 565, 410, 12, 0x173242, 1).setOrigin(0, 0.5).setDepth(2);
     this.progressFill = this.add
-      .rectangle(32, 766, 410, 12, 0x5dffe0, 1)
+      .rectangle(32, 565, 410, 12, 0x5dffe0, 1)
       .setOrigin(0, 0.5)
       .setDepth(3);
 
-    this.checkpointText = this.add.text(466, 757, "", {
+    this.checkpointText = this.add.text(466, 556, "", {
       fontFamily: "Inter, Arial, sans-serif",
       fontSize: "11px",
       fontStyle: "bold",
@@ -179,13 +179,13 @@ export class AdventureHudScene extends Phaser.Scene {
 
   private createGiftSlots(): void {
     this.add
-      .rectangle(18, 800, LOGICAL_WIDTH - 36, 142, 0x041019, 0.94)
+      .rectangle(18, 592, LOGICAL_WIDTH - 36, 154, 0x041019, 0.94)
       .setOrigin(0)
       .setStrokeStyle(2, 0x2ccad1, 0.48)
       .setDepth(2);
 
     this.add
-      .text(30, 807, "GESCHENKE", {
+      .text(30, 599, "GESCHENKE", {
         fontFamily: "Inter, Arial Black, sans-serif",
         fontSize: "11px",
         fontStyle: "bold",
@@ -196,16 +196,16 @@ export class AdventureHudScene extends Phaser.Scene {
     SLOT_DATA.forEach((slot, index) => {
       const x = 76 + index * 142;
       this.add
-        .rectangle(x, 873, 126, 108, 0x071924, 0.94)
+        .rectangle(x, 671, 126, 126, 0x071924, 0.94)
         .setStrokeStyle(2, slot.accent, slot.key === "galaxy" ? 0.92 : 0.62)
         .setDepth(3);
       this.add
-        .circle(x, 851, 31, slot.accent, 0.08)
+        .circle(x, 640, 28, slot.accent, 0.08)
         .setStrokeStyle(1, slot.accent, 0.2)
         .setDepth(3);
-      this.add.image(x, 851, ICON_KEYS[slot.key]).setDisplaySize(58, 58).setDepth(4);
+      this.add.image(x, 640, ICON_KEYS[slot.key]).setDisplaySize(54, 54).setDepth(4);
       this.add
-        .text(x, 884, slot.title, {
+        .text(x, 674, slot.title, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "10px",
           fontStyle: "bold",
@@ -214,7 +214,7 @@ export class AdventureHudScene extends Phaser.Scene {
         .setOrigin(0.5, 0)
         .setDepth(4);
       this.add
-        .text(x, 906, slot.label, {
+        .text(x, 704, slot.label, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "11px",
           fontStyle: "bold",

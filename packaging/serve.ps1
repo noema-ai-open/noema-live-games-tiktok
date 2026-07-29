@@ -163,7 +163,7 @@ Write-Host "  Stream (fuer LIVE Studio / OBS):"
 Write-Host "  $streamUrl" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  In TikTok LIVE Studio: Quelle hinzufuegen -> Link -> obige Stream-URL"
-Write-Host "  Quellgroesse 720 x 1280 einstellen."
+Write-Host "  Quellgroesse 720 x 760 einstellen."
 Write-Host ""
 Write-Host "  Dieses Fenster offen lassen. Zum Beenden schliessen oder Strg+C." -ForegroundColor DarkGray
 Write-Host ""

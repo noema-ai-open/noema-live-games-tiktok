@@ -1,12 +1,12 @@
 import Phaser from "phaser";
 import type { AdventureLevel, LevelSegment } from "../adventure/levelTypes";
-import { LOGICAL_HEIGHT } from "../config/gameConfig";
+import { WORLD_RENDER_HEIGHT } from "../config/gameConfig";
 
 /**
  * Lightweight procedural world art for the first playable build.
  *
  * Everything is deterministic and made from Phaser primitives. It gives the
- * 3:4 stream block a readable cyber-mountain identity while keeping a clean
+ * compact stream block a readable cyber-mountain identity while keeping a clean
  * asset seam for later PNG/parallax replacements.
  */
 export class EnvironmentRenderer {
@@ -54,7 +54,7 @@ export class EnvironmentRenderer {
       skyColors[3]!,
       1,
     );
-    sky.fillRect(-800, 0, width, LOGICAL_HEIGHT);
+    sky.fillRect(-800, 0, width, WORLD_RENDER_HEIGHT);
 
     sky.fillStyle(0x5c2b68, 0.11);
     sky.fillCircle(level.finishX * 0.56, 300, 360);
@@ -152,7 +152,7 @@ export class EnvironmentRenderer {
       const drawPlatform = (start: number, end: number, platformTop = top): void => {
         const width = Math.max(0, end - start);
         graphics.fillStyle(base, 1);
-        graphics.fillRect(start, platformTop, width, LOGICAL_HEIGHT - platformTop);
+        graphics.fillRect(start, platformTop, width, WORLD_RENDER_HEIGHT - platformTop);
         graphics.fillStyle(0x234d4b, 0.74);
         graphics.fillRect(start, platformTop + 8, width, 24);
         graphics.lineStyle(6, edge, 0.78);
@@ -196,11 +196,11 @@ export class EnvironmentRenderer {
   ): void {
     const width = Math.max(0, end - start);
     graphics.fillGradientStyle(0x06111d, 0x06111d, 0x1d0b2a, 0x1d0b2a, 0.96);
-    graphics.fillRect(start, top, width, LOGICAL_HEIGHT - top);
+    graphics.fillRect(start, top, width, WORLD_RENDER_HEIGHT - top);
     graphics.fillStyle(0xff5fa8, 0.08);
     graphics.fillEllipse(start + width / 2, top + 180, Math.max(60, width * 0.7), 260);
     graphics.lineStyle(2, 0x6dfff0, 0.16);
-    for (let y = top + 72; y < LOGICAL_HEIGHT; y += 74) {
+    for (let y = top + 72; y < WORLD_RENDER_HEIGHT; y += 74) {
       graphics.lineBetween(start + width * 0.28, y, end - width * 0.18, y + 34);
     }
   }

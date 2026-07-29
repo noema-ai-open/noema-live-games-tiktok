@@ -64,7 +64,7 @@ body {
   width: auto;
   max-width: 100%;
   max-height: calc(100vh - 60px);
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 18 / 19;
   border-radius: 8px;
 }
 

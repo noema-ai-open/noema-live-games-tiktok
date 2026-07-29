@@ -5,7 +5,7 @@ trägt einen Energiekern durch eine futuristische Bergwelt zum
 Himmelsleuchtfeuer. Die Figur läuft automatisch, hält vor kontrollierten
 Hindernissen an und reagiert sichtbar auf Geschenke und Chatabstimmungen.
 
-Die Spielfläche ist als Hochkant-Block in **720 × 960 (3:4)** ausgelegt. Damit
+Die Spielfläche ist als kompakter Hochkant-Block in **720 × 760** ausgelegt. Damit
 passt sie unter ein Kamerabild in einem vertikalen TikTok-Layout. Die Welt
 scrollt seitlich innerhalb dieses Blocks.
 

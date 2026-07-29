@@ -8,7 +8,7 @@ Base: `feat/noema-adventure-runner` at commit `2d1b521d353343153a3421b036bc33b37
 
 - `HeroView.ts`: NURI is now a readable procedural explorer with hood, face, goggles, scarf, backpack and animated energy core instead of a simple geometric robot.
 - `EnvironmentRenderer.ts`: richer deterministic cyber-mountain world with layered sky, stars, moon glow, clouds, mountains, trees, ruins, chasm glow, checkpoints and a stronger summit beacon.
-- `AdventureHudScene.ts`: stream-safe 720x960 HUD. Gift cards moved from the bottom into the upper part of the game block, obstacle prompts remain large, and the lower edge is intentionally quiet for TikTok chat/captions.
+- `AdventureHudScene.ts`: stream-safe 720x760 HUD. Gift cards sit at the bottom of the compact game block, obstacle prompts remain large, and the game can align with the camera width in TikTok LIVE Studio.
 
 ## Verification task
 
@@ -37,7 +37,7 @@ Check specifically:
 1. NURI renders without missing or displaced body parts in idle, run, jump, climb, fall, celebrate and bomb reaction.
 2. Camera movement and obstacle interaction remain unchanged.
 3. Gift cards do not cover the hero or the active obstacle.
-4. Obstacle prompt stays inside the 720x960 canvas.
+4. Obstacle prompt stays inside the 720x760 canvas.
 5. Route vote, gift feedback and result panels do not overlap critically.
 6. Reduced Motion still reduces animation.
 7. No gameplay, Bridge, Replay or Operator logic was changed accidentally.

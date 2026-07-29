@@ -25,13 +25,13 @@ TikTok LIVE Studio
 1. NOEMA-AI Ascent starten (siehe oben).
 2. In LIVE Studio: Quelle hinzufuegen -> Link
 3. Die Stream-Adresse aus dem schwarzen Fenster einfuegen.
-4. Quellgroesse auf 980 x 1280 stellen.
+4. Quellgroesse auf 720 x 760 stellen.
 
 Die Steuerung (Operator) laesst man daneben im normalen Browser offen. Dort
 sind Rundensteuerung, Safe Mode, Lautstaerke und die Geschenk-Zuordnung. Im
 Stream-Bild ist davon nichts zu sehen.
 
-Fuer OBS: Browser-Quelle, gleiche Adresse, 980 x 1280.
+Fuer OBS: Browser-Quelle, gleiche Adresse, 720 x 760.
 
 
 Offline testen

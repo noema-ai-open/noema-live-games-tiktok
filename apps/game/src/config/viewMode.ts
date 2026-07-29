@@ -1,7 +1,8 @@
 export type ViewMode = "stream" | "operator";
 
 /**
- * `?view=stream` renders the clean 9:16 capture surface for OBS or TikTok LIVE
+ * `?view=stream` renders the compact capture surface below the camera for OBS
+ * or TikTok LIVE
  * Studio. Anything else falls back to the local operator workspace.
  */
 export function resolveViewMode(search = globalThis.location?.search ?? ""): ViewMode {

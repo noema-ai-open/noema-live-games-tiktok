@@ -1,6 +1,9 @@
-/** Hochkant-Spielblock fuer den Bereich unter dem Kamerabild (3:4). */
+/** Kompakter Spielblock fuer den Bereich direkt unter dem Kamerabild. */
 export const LOGICAL_WIDTH = 720;
-export const LOGICAL_HEIGHT = 960;
+export const LOGICAL_HEIGHT = 760;
+/** Die Welt behaelt ihre bisherigen Y-Koordinaten; nur der Kameraausschnitt wird kompakter. */
+export const WORLD_RENDER_HEIGHT = 960;
+export const WORLD_CAMERA_SCROLL_Y = 155;
 export const WORLD_GROUND_Y = 650;
 export const FIXED_HZ = 30;
 export const FIXED_STEP_MS = 1000 / FIXED_HZ;

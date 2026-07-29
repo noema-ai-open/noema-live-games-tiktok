@@ -15,7 +15,7 @@ Operatorbereich geprüft, verbunden und getrennt werden.
 
 ## Stream View
 
-`?view=stream&autostart=1` zeigt ausschließlich die 720×960-Spielfläche. Das
+`?view=stream&autostart=1` zeigt ausschließlich die 720×760-Spielfläche. Das
 Operatorpanel bleibt außerhalb des Streambilds. Für das im Referenzlayout
 gezeigte Ergebnis wird diese Quelle unter dem Kamerabild platziert.
 
