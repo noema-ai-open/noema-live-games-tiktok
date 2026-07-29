@@ -144,4 +144,19 @@ describe("ConnectorManager", () => {
     manager.mock.injectSimple("follow");
     expect(kinds).toHaveLength(2);
   });
+
+  it("forwards operator test events without duplicating active mock events", () => {
+    const manager = new ConnectorManager();
+    const kinds: string[] = [];
+    manager.onEvent((event) => kinds.push(event.kind));
+
+    const inactiveMockEvent = manager.mock.injectSimple("follow");
+    manager.forwardOperatorTestEvent(inactiveMockEvent);
+    expect(kinds).toEqual(["follow"]);
+
+    manager.use("mock");
+    const activeMockEvent = manager.mock.injectSimple("share");
+    manager.forwardOperatorTestEvent(activeMockEvent);
+    expect(kinds).toEqual(["follow", "share"]);
+  });
 });

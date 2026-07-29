@@ -292,28 +292,36 @@ export class OperatorPanel {
 
   private sendFree(kind: string): void {
     if (kind === "like") {
-      this.deps.connectors.mock.injectSimple("like", MOCK_VIEWERS[1]!, 12);
+      this.forwardTestEvent(
+        this.deps.connectors.mock.injectSimple("like", MOCK_VIEWERS[1]!, 12),
+      );
       return;
     }
     if (kind === "follow") {
-      this.deps.connectors.mock.injectSimple("follow", MOCK_VIEWERS[2]!);
+      this.forwardTestEvent(
+        this.deps.connectors.mock.injectSimple("follow", MOCK_VIEWERS[2]!),
+      );
       return;
     }
-    this.deps.connectors.mock.injectSimple("share", MOCK_VIEWERS[3]!);
+    this.forwardTestEvent(
+      this.deps.connectors.mock.injectSimple("share", MOCK_VIEWERS[3]!),
+    );
   }
 
   private sendTestGift(id: string): void {
     this.deps.audio.play("gift");
     const gift = TEST_GIFTS.find((item) => item.id === id);
     if (!gift) return;
-    this.deps.connectors.mock.injectGift(
-      {
-        giftId: `name:${gift.giftName.toLowerCase().replace(/\s+/g, "-")}`,
-        giftName: gift.giftName,
-        coinValue: gift.coins,
-        comboFinal: true,
-      },
-      MOCK_VIEWERS[0]!,
+    this.forwardTestEvent(
+      this.deps.connectors.mock.injectGift(
+        {
+          giftId: `name:${gift.giftName.toLowerCase().replace(/\s+/g, "-")}`,
+          giftName: gift.giftName,
+          coinValue: gift.coins,
+          comboFinal: true,
+        },
+        MOCK_VIEWERS[0]!,
+      ),
     );
   }
 
@@ -322,17 +330,19 @@ export class OperatorPanel {
     const comboId = `test-streak-${this.streakCounter}`;
     for (let index = 1; index <= 5; index += 1) {
       window.setTimeout(() => {
-        this.deps.connectors.mock.injectGift(
-          {
-            giftId: "name:rose",
-            giftName: "Rose",
-            coinValue: 1,
-            repeatCount: index,
-            comboId,
-            ...(index === 5 ? { comboFinal: true } : {}),
-          },
-          MOCK_VIEWERS[1]!,
-          `${comboId}-${index}`,
+        this.forwardTestEvent(
+          this.deps.connectors.mock.injectGift(
+            {
+              giftId: "name:rose",
+              giftName: "Rose",
+              coinValue: 1,
+              repeatCount: index,
+              comboId,
+              ...(index === 5 ? { comboFinal: true } : {}),
+            },
+            MOCK_VIEWERS[1]!,
+            `${comboId}-${index}`,
+          ),
         );
       }, index * 180);
     }
@@ -341,17 +351,25 @@ export class OperatorPanel {
   private sendDuplicate(): void {
     const eventId = `duplicate-${Date.now()}`;
     for (let index = 0; index < 2; index += 1) {
-      this.deps.connectors.mock.injectGift(
-        {
-          giftId: "name:rose",
-          giftName: "Rose",
-          coinValue: 1,
-          comboFinal: true,
-        },
-        MOCK_VIEWERS[2]!,
-        eventId,
+      this.forwardTestEvent(
+        this.deps.connectors.mock.injectGift(
+          {
+            giftId: "name:rose",
+            giftName: "Rose",
+            coinValue: 1,
+            comboFinal: true,
+          },
+          MOCK_VIEWERS[2]!,
+          eventId,
+        ),
       );
     }
+  }
+
+  private forwardTestEvent(
+    event: ReturnType<ConnectorManager["mock"]["injectGift"]>,
+  ): void {
+    this.deps.connectors.forwardOperatorTestEvent(event);
   }
 
   private async handleAction(action: string): Promise<void> {

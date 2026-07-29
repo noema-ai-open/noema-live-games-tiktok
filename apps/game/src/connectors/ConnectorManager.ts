@@ -49,6 +49,16 @@ export class ConnectorManager {
     return this.active?.getSnapshot() ?? null;
   }
 
+  /**
+   * Delivers an operator-generated mock event while preserving the active
+   * connector. When mock is active it has already forwarded the event through
+   * its normal subscription, so forwarding it again would create a duplicate.
+   */
+  forwardOperatorTestEvent(event: NormalizedLiveEvent): void {
+    if (this.active === this.mock) return;
+    this.fanOutEvent(event);
+  }
+
   use(id: ConnectorId): Connector {
     const next = id === "mock" ? this.mock : this.bridge;
     if (this.active === next) {
