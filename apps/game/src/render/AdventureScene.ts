@@ -53,7 +53,7 @@ export class AdventureScene extends Phaser.Scene {
     this.heroView = new HeroView(this);
     this.speechBubble = new HeroSpeechBubble(this);
     this.bombView = new TsarBombRenderer(this);
-    this.celebrationView = new LevelCelebrationRenderer(this);
+    this.celebrationView = new LevelCelebrationRenderer(this, level);
   }
 
   update(_time: number, delta: number): void {

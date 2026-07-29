@@ -16,6 +16,8 @@ const VISUAL_GROUND_OFFSET = 16;
 export class HeroView {
   readonly container: Phaser.GameObjects.Container;
 
+  private readonly scene: Phaser.Scene;
+  private readonly trail: Phaser.GameObjects.Graphics;
   private readonly shadow: Phaser.GameObjects.Ellipse;
   private readonly backpack: Phaser.GameObjects.Rectangle;
   private readonly backpackCore: Phaser.GameObjects.Arc;
@@ -41,8 +43,17 @@ export class HeroView {
   private readonly mouth: Phaser.GameObjects.Arc;
   private readonly antenna: Phaser.GameObjects.Rectangle;
   private readonly antennaLight: Phaser.GameObjects.Arc;
+  private readonly trailPoints: { x: number; y: number }[] = [];
+  private lastAnimation = "";
+  private jumpStartedTick = -1;
+  private lastTrailTick = -1;
+  private fallStartY = 0;
+  private maxFallDistance = 0;
+  private landingWobbleStartedTick = -1;
 
   constructor(scene: Phaser.Scene) {
+    this.scene = scene;
+    this.trail = scene.add.graphics().setDepth(29);
     this.shadow = scene.add.ellipse(0, 4, 72, 18, 0x02080c, 0.46);
 
     this.scarfTail = scene.add
@@ -148,8 +159,25 @@ export class HeroView {
 
   update(hero: HeroSnapshot, tick: number, reducedMotion: boolean): void {
     const visualY = hero.y - VISUAL_GROUND_OFFSET;
+    const animationChanged = hero.animation !== this.lastAnimation;
+    if (animationChanged && hero.animation === "jump") this.jumpStartedTick = tick;
+    if (animationChanged && hero.animation === "fall") {
+      this.fallStartY = hero.y;
+      this.maxFallDistance = 0;
+    }
+    if (hero.animation === "fall") {
+      this.maxFallDistance = Math.max(this.maxFallDistance, hero.y - this.fallStartY);
+    }
+    if (animationChanged && hero.animation === "land") {
+      this.emitLandingBurst(hero.x, hero.y, reducedMotion);
+      if (this.lastAnimation === "fall" && this.maxFallDistance > 90) {
+        this.landingWobbleStartedTick = tick;
+      }
+    }
+
     this.container.setPosition(hero.x, visualY);
     this.container.setScale(hero.facing, 1);
+    this.updateTrail(hero, visualY, tick, reducedMotion);
 
     const motion = reducedMotion ? 0.35 : 1;
     const phase = tick * 0.34;
@@ -168,15 +196,29 @@ export class HeroView {
         this.container.y = visualY - Math.abs(Math.sin(phase)) * 4 * motion;
         break;
       }
-      case "jump":
-        this.leftLeg.rotation = -0.58;
-        this.rightLeg.rotation = 0.58;
-        this.leftBoot.rotation = 0.2;
-        this.rightBoot.rotation = -0.2;
-        this.leftArm.rotation = -1.75;
-        this.rightArm.rotation = 1.75;
-        this.scarfTail.rotation = -0.55;
+      case "jump": {
+        const anticipationTicks = reducedMotion ? 1 : 2;
+        if (tick - this.jumpStartedTick <= anticipationTicks) {
+          const squash = reducedMotion ? 0.92 : 0.82;
+          this.container.setScale(hero.facing * (reducedMotion ? 1.03 : 1.08), squash);
+          this.container.y = visualY + (reducedMotion ? 3 : 8);
+          this.leftLeg.rotation = -0.32;
+          this.rightLeg.rotation = 0.32;
+          this.leftBoot.rotation = 0.12;
+          this.rightBoot.rotation = -0.12;
+          this.leftArm.rotation = -0.45;
+          this.rightArm.rotation = 0.45;
+        } else {
+          this.leftLeg.rotation = -0.58;
+          this.rightLeg.rotation = 0.58;
+          this.leftBoot.rotation = 0.2;
+          this.rightBoot.rotation = -0.2;
+          this.leftArm.rotation = -1.75;
+          this.rightArm.rotation = 1.75;
+          this.scarfTail.rotation = -0.55;
+        }
         break;
+      }
       case "climb":
         this.leftArm.rotation = Math.sin(phase) * 0.72 - 0.72;
         this.rightArm.rotation = -Math.sin(phase) * 0.72 + 0.72;
@@ -214,12 +256,22 @@ export class HeroView {
         this.rightArm.rotation = -1.32;
         this.container.rotation = 0.08;
         break;
-      case "land":
+      case "land": {
         this.leftLeg.rotation = -0.28;
         this.rightLeg.rotation = 0.28;
         this.body.y = -52;
         this.hood.y = -101;
+        const wobbleAge = tick - this.landingWobbleStartedTick;
+        const wobbleTicks = reducedMotion ? 2 : 6;
+        if (wobbleAge >= 0 && wobbleAge < wobbleTicks) {
+          const strength = reducedMotion ? 0.018 : 0.075;
+          this.container.rotation =
+            Math.sin(wobbleAge * Math.PI * 0.85) *
+            strength *
+            (1 - wobbleAge / wobbleTicks);
+        }
         break;
+      }
       default:
         this.container.y = visualY - Math.abs(Math.sin(phase * 0.22)) * 2.5 * motion;
         this.hood.rotation = Math.sin(phase * 0.16) * 0.035 * motion;
@@ -235,6 +287,63 @@ export class HeroView {
       1 - Math.min(0.45, Math.max(0, (WORLD_GROUND_Y - hero.y) / 420)),
       1,
     );
+    this.lastAnimation = hero.animation;
+  }
+
+  private updateTrail(
+    hero: HeroSnapshot,
+    visualY: number,
+    tick: number,
+    reducedMotion: boolean,
+  ): void {
+    const airborne = hero.animation === "jump" || hero.animation === "fall";
+    if (airborne && tick !== this.lastTrailTick) {
+      this.trailPoints.push({
+        x: hero.x - hero.facing * 18,
+        y: visualY - 48,
+      });
+      this.lastTrailTick = tick;
+    } else if (!airborne) {
+      this.trailPoints.length = 0;
+    }
+
+    const maxPoints = reducedMotion ? 4 : 8;
+    while (this.trailPoints.length > maxPoints) this.trailPoints.shift();
+
+    this.trail.clear();
+    for (let index = 1; index < this.trailPoints.length; index += 1) {
+      const previous = this.trailPoints[index - 1]!;
+      const point = this.trailPoints[index]!;
+      const progress = index / this.trailPoints.length;
+      const alpha = progress * (reducedMotion ? 0.2 : 0.48);
+      this.trail.lineStyle(reducedMotion ? 3 : 6, 0x6dfff0, alpha);
+      this.trail.lineBetween(previous.x, previous.y, point.x, point.y);
+      this.trail.fillStyle(index % 2 === 0 ? 0xff65b5 : 0xffffff, alpha * 0.9);
+      this.trail.fillCircle(point.x, point.y, reducedMotion ? 1.8 : 3);
+    }
+  }
+
+  private emitLandingBurst(x: number, y: number, reducedMotion: boolean): void {
+    const offsets = [-34, -23, -12, 0, 12, 23, 34];
+    const count = reducedMotion ? 3 : offsets.length;
+    const start = Math.floor((offsets.length - count) / 2);
+    for (let index = 0; index < count; index += 1) {
+      const offset = offsets[start + index]!;
+      const particle = this.scene.add
+        .circle(x + offset * 0.18, y - 4, reducedMotion ? 2.5 : 4, 0x78fff0, 0.9)
+        .setDepth(29)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.scene.tweens.add({
+        targets: particle,
+        x: x + offset * (reducedMotion ? 0.28 : 1),
+        y: y - (reducedMotion ? 5 : 18 + (index % 3) * 7),
+        alpha: 0,
+        scale: reducedMotion ? 0.75 : 0.25,
+        duration: reducedMotion ? 130 : 220,
+        ease: "Quad.easeOut",
+        onComplete: () => particle.destroy(),
+      });
+    }
   }
 
   private resetPose(): void {
