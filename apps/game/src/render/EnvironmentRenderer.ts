@@ -3,11 +3,10 @@ import type { AdventureLevel, LevelSegment } from "../adventure/levelTypes";
 import { WORLD_RENDER_HEIGHT } from "../config/gameConfig";
 
 /**
- * Lightweight procedural world art for the first playable build.
+ * Layered PNG scenery with deterministic Phaser gameplay surfaces on top.
  *
- * Everything is deterministic and made from Phaser primitives. It gives the
- * compact stream block a readable cyber-mountain identity while keeping a clean
- * asset seam for later PNG/parallax replacements.
+ * The images provide atmosphere only. Ground height, gaps and collisions still
+ * come exclusively from the level segments.
  */
 export class EnvironmentRenderer {
   private readonly far: Phaser.GameObjects.Container;
@@ -21,13 +20,14 @@ export class EnvironmentRenderer {
     this.atmosphere = scene.add.container(0, 0).setDepth(-8).setScrollFactor(0.72, 1);
     this.ground = scene.add.container(0, 0).setDepth(0);
 
+    const usesPaintedBackground = this.drawBackgroundArt(scene, level);
     this.drawSky(scene, level);
-    this.drawMountains(scene, level);
+    if (!usesPaintedBackground) this.drawMountains(scene, level);
     this.drawClouds(scene, level);
     this.drawGround(scene, level.segments);
-    this.drawRuinLanguage(scene, level);
+    if (!usesPaintedBackground) this.drawRuinLanguage(scene, level);
     this.drawLandmarks(scene, level);
-    this.drawRegionalDetails(scene, level);
+    if (!usesPaintedBackground) this.drawRegionalDetails(scene, level);
   }
 
   update(_cameraScrollX: number, tick: number, reducedMotion: boolean): void {
@@ -36,6 +36,23 @@ export class EnvironmentRenderer {
     this.middle.y = -drift * 0.35;
     this.atmosphere.y = drift * 0.22;
     this.atmosphere.alpha = reducedMotion ? 0.72 : 0.72 + Math.sin(tick * 0.018) * 0.08;
+  }
+
+  private drawBackgroundArt(scene: Phaser.Scene, level: AdventureLevel): boolean {
+    const texture =
+      level.region === "crystal_caves"
+        ? "region-crystal-caverns"
+        : level.region === "storm_summit"
+          ? "region-storm-summit"
+          : "region-neon-valley";
+    if (!scene.textures.exists(texture)) return false;
+    const background = scene.add
+      .image(-240, 0, texture)
+      .setOrigin(0)
+      .setDisplaySize(2700, WORLD_RENDER_HEIGHT)
+      .setAlpha(0.92);
+    this.far.add(background);
+    return true;
   }
 
   private drawSky(scene: Phaser.Scene, level: AdventureLevel): void {
@@ -52,7 +69,7 @@ export class EnvironmentRenderer {
       skyColors[1]!,
       skyColors[2]!,
       skyColors[3]!,
-      1,
+      0.18,
     );
     sky.fillRect(-800, 0, width, WORLD_RENDER_HEIGHT);
 

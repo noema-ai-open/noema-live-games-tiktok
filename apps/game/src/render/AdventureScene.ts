@@ -5,6 +5,7 @@ import {
   WORLD_CAMERA_SCROLL_Y,
   WORLD_RENDER_HEIGHT,
 } from "../config/gameConfig";
+import { NURI_SPRITE_SHEET } from "../assets/heroAssetConfig";
 import type { Simulation } from "../simulation/Simulation";
 import type { RoundStatus, TsarPhase } from "../simulation/types";
 import type { AudioSystem } from "../systems/AudioSystem";
@@ -40,6 +41,41 @@ export class AdventureScene extends Phaser.Scene {
     private readonly live?: LiveSession,
   ) {
     super({ key: "AdventureScene" });
+  }
+
+  preload(): void {
+    this.load.spritesheet("nuri-v1", NURI_SPRITE_SHEET.imageUrl, {
+      frameWidth: NURI_SPRITE_SHEET.frameWidth,
+      frameHeight: NURI_SPRITE_SHEET.frameHeight,
+    });
+    this.load.image("region-neon-valley", "/assets/world/region-1-neon-valley.png");
+    this.load.image(
+      "region-crystal-caverns",
+      "/assets/world/region-2-crystal-caverns.png",
+    );
+    this.load.image("region-storm-summit", "/assets/world/region-3-storm-summit.png");
+    for (const asset of [
+      "bridge-medium",
+      "block-amber",
+      "block-cyan",
+      "gate-closed",
+      "gate-open",
+      "checkpoint",
+      "beacon",
+      "rock-tall",
+      "rock-short",
+      "crystal-large",
+      "crystal-medium",
+      "crystal-small",
+      "ruin-tall",
+      "ruin-short",
+      "shrub-round",
+      "shrub-leaf",
+      "helper-arrive",
+      "helper-repair",
+    ] as const) {
+      this.load.image(`world-${asset}`, `/assets/world/objects/${asset}.png`);
+    }
   }
 
   create(): void {

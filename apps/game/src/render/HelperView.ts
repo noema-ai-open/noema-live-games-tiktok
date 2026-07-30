@@ -5,7 +5,7 @@ type HelperVisualState = "hidden" | "entering" | "active" | "exiting";
 export class HelperView {
   private readonly scene: Phaser.Scene;
   private readonly container: Phaser.GameObjects.Container;
-  private readonly tail: Phaser.GameObjects.Triangle;
+  private readonly sprite: Phaser.GameObjects.Image;
   private readonly beam: Phaser.GameObjects.Rectangle;
   private visualState: HelperVisualState = "hidden";
   private requestedActive = false;
@@ -16,19 +16,12 @@ export class HelperView {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    const body = scene.add
-      .ellipse(0, 0, 64, 38, 0xffa938, 1)
-      .setStrokeStyle(3, 0xeffff8, 0.9);
-    const head = scene.add
-      .circle(28, -15, 22, 0xffc05c, 1)
-      .setStrokeStyle(3, 0xeffff8, 0.9);
-    const earA = scene.add.triangle(15, -39, 0, 18, 12, 0, 22, 20, 0xff8e2a);
-    const earB = scene.add.triangle(40, -42, 0, 20, 11, 0, 22, 20, 0xff8e2a);
-    const eye = scene.add.circle(35, -18, 4, 0x07161c);
-    this.tail = scene.add.triangle(-39, -5, 0, 8, 28, 0, 0, -8, 0xffa938);
-    this.beam = scene.add.rectangle(68, 1, 78, 8, 0x73fff0, 0.65).setOrigin(0, 0.5);
+    this.sprite = scene.add
+      .image(0, 0, "world-helper-arrive")
+      .setDisplaySize(118, 118);
+    this.beam = scene.add.rectangle(46, 4, 88, 8, 0x73fff0, 0.65).setOrigin(0, 0.5);
     this.container = scene.add
-      .container(0, 0, [this.tail, body, head, earA, earB, eye, this.beam])
+      .container(0, 0, [this.sprite, this.beam])
       .setDepth(28)
       .setVisible(false);
   }
@@ -56,6 +49,9 @@ export class HelperView {
     const motion = reducedMotion ? 0.25 : 1;
     if (this.visualState === "active") {
       const greeting = tick < this.greetingUntilTick;
+      this.sprite.setTexture(
+        greeting ? "world-helper-arrive" : "world-helper-repair",
+      );
       const hop = greeting
         ? Math.abs(Math.sin(tick * 0.62)) * (reducedMotion ? 3 : 11)
         : 0;
@@ -63,11 +59,13 @@ export class HelperView {
         this.targetX,
         this.targetY + Math.sin(tick * 0.18) * 5 * motion - hop,
       );
-      this.tail.rotation =
+      this.sprite.rotation =
         Math.sin(tick * (greeting ? 0.72 : 0.35)) *
-        (greeting ? (reducedMotion ? 0.42 : 0.9) : 0.5 * motion);
+        (greeting ? (reducedMotion ? 0.04 : 0.09) : 0.025 * motion);
     } else if (this.visualState === "entering") {
-      this.tail.rotation = Math.sin(tick * 0.72) * (reducedMotion ? 0.38 : 0.85);
+      this.sprite
+        .setTexture("world-helper-arrive")
+        .setRotation(Math.sin(tick * 0.72) * (reducedMotion ? 0.035 : 0.08));
     }
 
     this.beam.setAlpha(0.35 + Math.abs(Math.sin(tick * 0.22)) * 0.45);

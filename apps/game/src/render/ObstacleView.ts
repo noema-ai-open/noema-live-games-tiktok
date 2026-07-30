@@ -60,15 +60,12 @@ export class ObstacleView {
         this.blocks.set(segment.id, new BlockBuilderView(this.scene, segment));
       }
       if (segment.type === "repair_gate") {
-        const left = this.scene.add
-          .rectangle(-38, -64, 32, 128, 0x20394a, 1)
-          .setStrokeStyle(4, 0xff5f9f, 0.85);
-        const right = this.scene.add
-          .rectangle(38, -64, 32, 128, 0x20394a, 1)
-          .setStrokeStyle(4, 0xff5f9f, 0.85);
-        const energy = this.scene.add.rectangle(0, -64, 42, 112, 0xff4f92, 0.28);
+        const gateImage = this.scene.add
+          .image(0, 0, "world-gate-closed")
+          .setOrigin(0.5, 1)
+          .setDisplaySize(178, 178);
         const gate = this.scene.add
-          .container(segment.waitX ?? segment.startX, segment.groundY, [left, right, energy])
+          .container(segment.waitX ?? segment.startX, segment.groundY, [gateImage])
           .setDepth(15);
         this.gates.set(segment.id, gate);
       }

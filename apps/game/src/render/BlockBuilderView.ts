@@ -12,14 +12,13 @@ export class BlockBuilderView {
     for (let index = 0; index < 3; index += 1) {
       const size = 56;
       const block = scene.add
-        .rectangle(0, 0, size, size, 0x1f8790, 1)
-        .setStrokeStyle(4, 0x72fff0, 0.95);
-      const core = scene.add.rectangle(0, 0, 25, 25, 0xffd36a, 0.8).setRotation(Math.PI / 4);
+        .image(0, 0, index === 1 ? "world-block-cyan" : "world-block-amber")
+        .setDisplaySize(size + 12, size + 12);
       const container = scene.add
         .container(
           originX + index * 50,
           segment.groundY - size / 2 - index * 31,
-          [block, core],
+          [block],
         )
         .setDepth(13)
         .setVisible(false);

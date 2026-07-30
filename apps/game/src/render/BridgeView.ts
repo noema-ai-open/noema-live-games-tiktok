@@ -19,14 +19,13 @@ export class BridgeView {
 
     for (let index = 0; index < count; index += 1) {
       const plate = scene.add
-        .rectangle(0, 0, Math.max(42, width - 8), 20, 0x47e8df, 0.96)
-        .setStrokeStyle(3, 0xcafff6, 0.9);
-      const brace = scene.add.rectangle(0, 13, Math.max(34, width - 20), 7, 0x17465a, 1);
+        .image(0, 4, "world-bridge-medium")
+        .setDisplaySize(Math.max(54, width + 7), 74);
       const glow = scene.add.rectangle(0, -4, Math.max(28, width - 28), 4, 0xffffff, 0.8);
       const container = scene.add
         // The plate is 20 px high: +10 keeps its upper edge exactly on the
         // gameplay ground line used by HeroController.
-        .container(start + width * (index + 0.5), segment.groundY + 10, [brace, plate, glow])
+        .container(start + width * (index + 0.5), segment.groundY + 10, [plate, glow])
         .setDepth(12)
         .setVisible(false);
       this.segments.push(container);
